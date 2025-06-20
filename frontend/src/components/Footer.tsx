@@ -1,0 +1,59 @@
+import { Users, Mail, Phone, MapPin } from 'lucide-react';
+
+const Footer = () => {
+  return (
+    <footer className="bg-gray-900 text-white mt-auto w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="col-span-1 md:col-span-2">
+            <div className="flex items-center space-x-2 mb-4">
+              <Users className="h-8 w-8 text-red-600" />
+              <span className="text-xl font-bold">Ranjit Tamang</span>
+            </div>
+            <p className="text-gray-300 mb-4 max-w-md">
+              Dedicated to serving the people of Nepal through progressive politics, 
+              advocating for social justice, education, and healthcare reforms.
+            </p>
+            <div className="text-sm text-gray-400">
+              Central Committee Member, CPN (Maoist Centre)
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-gray-300">
+              <li><a href="/about" className="hover:text-red-500 transition-colors">About</a></li>
+              <li><a href="/journey" className="hover:text-red-500 transition-colors">Political Journey</a></li>
+              <li><a href="/achievements" className="hover:text-red-500 transition-colors">Achievements</a></li>
+              <li><a href="/contact" className="hover:text-red-500 transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+            <div className="space-y-3 text-gray-300">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-red-600" />
+                <span className="text-sm">Kathmandu, Nepal</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-red-600" />
+                <span className="text-sm">contact@ranjittamang.np</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-red-600" />
+                <span className="text-sm">+977-XX-XXXXXXX</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <p>&copy; 2025 Ranjit Tamang. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
