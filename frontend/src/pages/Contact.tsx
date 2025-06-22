@@ -244,14 +244,16 @@ const Contact = () => {
             <p className="text-xl text-gray-600">Located in the heart of Kathmandu</p>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-4 h-96 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <MapPin className="h-16 w-16 mx-auto mb-4 text-red-600" />
-              <p className="text-lg font-medium">Interactive Map</p>
-              <p className="text-sm">Kathmandu, Nepal</p>
-              <p className="text-xs mt-2">
-                [Map integration would be implemented here with actual coordinates]
-              </p>
-            </div>
+          <iframe
+                title="Google Map"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1766.3550826267417!2d85.33539336021757!3d27.695351544999617!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb19a77520a339%3A0x4df14616bdef4f1c!2sSoftech%20Foundation!5e0!3m2!1sen!2snp!4v1750573220544!5m2!1sen!2snp"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                loading="lazy"
+              ></iframe>
           </div>
         </div>
       </section>

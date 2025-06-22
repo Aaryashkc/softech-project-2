@@ -1,4 +1,4 @@
-import { Users, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -7,8 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <Users className="h-8 w-8 text-red-600" />
-              <span className="text-xl font-bold">Ranjit Tamang</span>
+              <span className="text-xl font-bold"><span className="text-red-500">R</span>anjit Tamang</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Dedicated to serving the people of Nepal through progressive politics, 

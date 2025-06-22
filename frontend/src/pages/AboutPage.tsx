@@ -1,4 +1,5 @@
 import { GraduationCap, Users, Award, Heart } from 'lucide-react';
+import ABOUT from '../assets/about.jpg'
 
 const AboutPage = () => {
   return (
@@ -47,7 +48,7 @@ const AboutPage = () => {
             </div>
             <div className="flex justify-center">
               <img 
-                src="https://images.pexels.com/photos/3184460/pexels-photo-3184460.jpeg?auto=compress&cs=tinysrgb&w=500&h=600&fit=crop"
+                src={ABOUT}
                 alt="Ranjit Tamang"
                 className="rounded-lg shadow-lg w-full max-w-md"
               />
