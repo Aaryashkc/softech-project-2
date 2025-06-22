@@ -1,7 +1,17 @@
+import React from 'react';
 import { Calendar, Users, Award, MapPin } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const Journey = () => {
-  const milestones = [
+interface Milestone {
+  year: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+const Journey: React.FC = () => {
+  const milestones: Milestone[] = [
     {
       year: "2017",
       title: "ANNISU (R) Chairman",

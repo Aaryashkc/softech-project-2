@@ -1,20 +1,29 @@
+import React, { useState, useMemo } from 'react';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
-import { useState } from 'react';
 
-const EventsPage = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
+type EventType = 'forum' | 'summit' | 'rally' | 'meeting' | 'community' | 'official' | 'workshop' | 'dialogue';
 
-  // Function to check if an event is upcoming or completed based on date
-  const getEventStatus = (dateStr: string): 'upcoming' | 'completed' => {
-    const eventDate = new Date(dateStr);
-    const today = new Date();
-    // Reset time part to compare dates only
-    today.setHours(0, 0, 0, 0);
-    return eventDate >= today ? 'upcoming' : 'completed';
-  };
+interface EventBase {
+  id: number;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  type: EventType;
+  description: string;
+  attendees: number;
+  image: string;
+}
+
+interface EventWithStatus extends EventBase {
+  status: 'upcoming' | 'completed';
+}
+
+const EventsPage: React.FC = () => {
+  const [activeFilter, setActiveFilter] = useState<EventType | 'all'>('all');
 
   // Demo data - this will be replaced with backend data later
-  const events = [
+  const baseEvents: EventBase[] = [
     {
       id: 1,
       title: "Community Healthcare Forum",
@@ -81,10 +90,26 @@ const EventsPage = () => {
       attendees: 45,
       image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=250&fit=crop"
     }
-  ].map(event => ({
-    ...event,
-    status: getEventStatus(event.date)
-  }));
+  ];
+
+  // Process events with status and filter
+  const { upcomingEvents, completedEvents } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const eventsWithStatus = baseEvents
+      .filter(event => activeFilter === 'all' || event.type === activeFilter)
+      .map(event => {
+        const eventDate = new Date(event.date);
+        const status = eventDate >= today ? 'upcoming' : 'completed';
+        return { ...event, status } as EventWithStatus;
+      });
+
+    return {
+      upcomingEvents: eventsWithStatus.filter(event => event.status === 'upcoming'),
+      completedEvents: eventsWithStatus.filter(event => event.status === 'completed')
+    };
+  }, [activeFilter]);
 
   const eventTypes = [
     { key: 'all', label: 'All Events' },
@@ -96,19 +121,8 @@ const EventsPage = () => {
     { key: 'meeting', label: 'Meetings' }
   ];
 
-  // Get current date at midnight for accurate comparison
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const filteredEvents = (activeFilter === 'all' 
-    ? events 
-    : events.filter(event => event.type === activeFilter));
-
-  // Categorize events based on date comparison
-  const upcomingEvents = filteredEvents.filter(event => new Date(event.date) >= today);
-  const pastEvents = filteredEvents.filter(event => new Date(event.date) < today);
-
-  const formatDate = (dateStr: string) => {
+  // Format date for display
+  const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
       weekday: 'long', 
@@ -118,7 +132,7 @@ const EventsPage = () => {
     });
   };
 
-  const EventCard = ({ event }: { event: typeof events[number] }) => (
+  const EventCard = ({ event }: { event: EventWithStatus }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden h-full flex flex-col">
       <div className="relative">
         <img 
@@ -173,6 +187,11 @@ const EventsPage = () => {
     </div>
   );
 
+  const totalAttendees = useMemo(() => 
+    baseEvents.reduce((sum: number, event: EventBase) => sum + event.attendees, 0),
+    [baseEvents]
+  );
+
   return (
     <div className="py-12">
       {/* Hero Section */}
@@ -196,7 +215,7 @@ const EventsPage = () => {
             {eventTypes.map((type) => (
               <button
                 key={type.key}
-                onClick={() => setActiveFilter(type.key)}
+                onClick={() => setActiveFilter(type.key as EventType | 'all')}
                 className={`px-6 py-2 rounded-full font-medium transition-colors duration-200 ${
                   activeFilter === type.key
                     ? 'bg-red-600 text-white'
@@ -231,18 +250,18 @@ const EventsPage = () => {
       </section>
 
       {/* Past Events */}
-      <section className={`py-16 ${pastEvents.length > 0 ? 'bg-white' : 'hidden'}`}>
+      <section className={`py-16 ${completedEvents.length > 0 ? 'bg-white' : 'hidden'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Past Events</h2>
             <div className="w-20 h-1 bg-red-600 mx-auto"></div>
-            {pastEvents.length === 0 && (
+            {completedEvents.length === 0 && (
               <p className="mt-4 text-gray-500">No past events to display.</p>
             )}
           </div>
-          {pastEvents.length > 0 && (
+          {completedEvents.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {pastEvents.map(event => (
+              {completedEvents.map(event => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
@@ -277,13 +296,13 @@ const EventsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div className="p-6">
               <div className="text-4xl font-bold text-red-600 mb-2">
-                {events.length}
+                {baseEvents.length}
               </div>
               <div className="text-gray-600 font-medium">Total Events</div>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold text-red-600 mb-2">
-                {events.reduce((sum, event) => sum + event.attendees, 0).toLocaleString()}
+                {totalAttendees.toLocaleString()}
               </div>
               <div className="text-gray-600 font-medium">People Engaged</div>
             </div>
@@ -295,7 +314,7 @@ const EventsPage = () => {
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold text-red-600 mb-2">
-                {new Set(events.map(event => event.location.split(',')[1] || event.location)).size}
+                {new Set(baseEvents.map(event => event.location.split(',')[1] || event.location)).size}
               </div>
               <div className="text-gray-600 font-medium">Locations Visited</div>
             </div>

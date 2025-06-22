@@ -1,8 +1,9 @@
-import { ArrowRight, Heart, Users, Briefcase } from 'lucide-react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import Profile from "../assets/profile.jpeg"; // Assuming you have a profile image in your assets
+import { ArrowRight, Heart, Users, Briefcase } from 'lucide-react';
+import Profile from "../assets/profile.jpeg";
 
-const HomePage = () => {
+const HomePage: React.FC = () => {
   return (
     <div>
       {/* Hero Section */}
