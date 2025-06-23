@@ -51,6 +51,7 @@ const AboutPage = () => {
                 src={ABOUT}
                 alt="Ranjit Tamang"
                 className="rounded-lg shadow-lg w-full max-w-md"
+                loading="lazy"
               />
             </div>
           </div>

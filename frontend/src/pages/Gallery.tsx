@@ -23,7 +23,6 @@ interface GalleryCategory {
   key: string;
   label: string;
   icon: React.ReactNode;
-  count: number;
 }
 
 const Gallery: React.FC = () => {
@@ -166,43 +165,36 @@ const Gallery: React.FC = () => {
       key: 'all', 
       label: 'All Media', 
       icon: <ImageIcon className="h-4 w-4" />,
-      count: mediaItems.length 
     },
     { 
       key: 'event', 
       label: 'Events', 
       icon: <Calendar className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'event').length 
     },
     { 
       key: 'community', 
       label: 'Community', 
       icon: <Users className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'community').length 
     },
     { 
       key: 'meeting', 
       label: 'Meetings', 
       icon: <Users className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'meeting').length 
     },
     { 
       key: 'rally', 
       label: 'Rallies', 
       icon: <Users className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'rally').length 
     },
     { 
       key: 'interview', 
       label: 'Interviews', 
       icon: <Camera className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'interview').length 
     },
     { 
       key: 'official', 
       label: 'Official', 
       icon: <Camera className="h-4 w-4" />,
-      count: mediaItems.filter(item => item.category === 'official').length 
     }
   ];
 
@@ -423,9 +415,6 @@ const Gallery: React.FC = () => {
               >
                 {category.icon}
                 <span className="ml-2">{category.label}</span>
-                <span className="ml-2 bg-white bg-opacity-20 px-2 py-1 rounded-full text-sm">
-                  {category.count}
-                </span>
               </button>
             ))}
           </div>

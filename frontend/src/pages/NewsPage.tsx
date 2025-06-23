@@ -5,7 +5,6 @@ interface NewsArticle {
   id: number;
   title: string;
   excerpt: string;
-  content: string;
   date: string;
   readTime: string;
   category: string;
@@ -43,7 +42,6 @@ const NewsPage = () => {
       id: 1,
       title: "Ranjit Tamang Calls for Educational Reform in National Assembly",
       excerpt: "In a passionate speech at the National Assembly, Ranjit Tamang outlined comprehensive plans for making quality education accessible to all Nepali citizens.",
-      content: "Speaking before a packed assembly hall, Central Committee member Ranjit Tamang presented a detailed proposal for educational reform that addresses the growing inequality in Nepal's education system...",
       date: "2025-06-18",
       readTime: "5 min read",
       category: "news",
@@ -57,7 +55,6 @@ const NewsPage = () => {
       id: 2,
       title: "Healthcare Accessibility: A Fundamental Right, Says Tamang",
       excerpt: "During a community health forum in Kathmandu, Ranjit Tamang emphasized the importance of universal healthcare coverage for all citizens.",
-      content: "The healthcare crisis in rural Nepal demands immediate attention and systematic reform. Speaking at the Community Healthcare Forum...",
       date: "2025-06-12",
       readTime: "4 min read",
       category: "news",
@@ -71,7 +68,6 @@ const NewsPage = () => {
       id: 3,
       title: "Youth Leadership Summit: Empowering the Next Generation",
       excerpt: "Hundreds of young leaders gathered at Tribhuvan University to discuss the future of Nepal's democratic institutions.",
-      content: "The youth are the backbone of our democracy, and their voices must be heard in every decision that shapes our nation's future...",
       date: "2025-06-08",
       readTime: "6 min read",
       category: "news",
