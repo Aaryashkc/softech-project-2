@@ -392,7 +392,7 @@ const Gallery: React.FC = () => {
   };
 
   return (
-    <div className="py-12">
+    <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -473,47 +473,6 @@ const Gallery: React.FC = () => {
             {getFilteredMedia().filter(item => !item.featured).map((media) => (
               <MediaCard key={media.id} media={media} />
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Gallery Statistics */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Gallery Statistics
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Our visual documentation of political activities and community engagement
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {mediaItems.length}
-              </div>
-              <div className="text-gray-600 font-medium">Total Media Items</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {mediaItems.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
-              </div>
-              <div className="text-gray-600 font-medium">Total Views</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {mediaItems.reduce((sum, item) => sum + (item.attendees || 0), 0).toLocaleString()}
-              </div>
-              <div className="text-gray-600 font-medium">People Reached</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {new Set(mediaItems.map(item => item.location)).size}
-              </div>
-              <div className="text-gray-600 font-medium">Locations Covered</div>
-            </div>
           </div>
         </div>
       </section>

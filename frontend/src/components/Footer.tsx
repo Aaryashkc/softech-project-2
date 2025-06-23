@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -22,6 +22,9 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-gray-300">
               <li><a href="/about" className="hover:text-red-500 transition-colors">About</a></li>
+              <li><a href="/events" className="hover:text-red-500 transition-colors">Events</a></li>
+              <li><a href="/news" className="hover:text-red-500 transition-colors">News & Interviews</a></li>
+              <li><a href="/gallery" className="hover:text-red-500 transition-colors">Gallery</a></li>
               <li><a href="/journey" className="hover:text-red-500 transition-colors">Political Journey</a></li>
               <li><a href="/achievements" className="hover:text-red-500 transition-colors">Achievements</a></li>
               <li><a href="/contact" className="hover:text-red-500 transition-colors">Contact</a></li>
@@ -42,6 +45,20 @@ const Footer = () => {
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-red-600" />
                 <span className="text-sm">+977-XX-XXXXXXX</span>
+              </div>
+
+              {/* Social Media Links */}
+              <div className="flex items-center space-x-2">
+                <Instagram className="h-4 w-4 text-red-600" />
+                <a href="https://www.instagram.com/" className="text-sm" target='_blank'>Instagram</a>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Facebook className="h-4 w-4 text-red-600" />
+                <a href="https://www.facebook.com/" className="text-sm" target='_blank'>FaceBook</a>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Twitter className="h-4 w-4 text-red-600" />
+                <a href="https://www.twitter.com/" className="text-sm" target='_blank'>Twitter</a>
               </div>
             </div>
           </div>

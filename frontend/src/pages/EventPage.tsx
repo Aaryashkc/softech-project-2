@@ -187,13 +187,8 @@ const EventsPage: React.FC = () => {
     </div>
   );
 
-  const totalAttendees = useMemo(() => 
-    baseEvents.reduce((sum: number, event: EventBase) => sum + event.attendees, 0),
-    [baseEvents]
-  );
-
   return (
-    <div className="py-12">
+    <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -286,38 +281,6 @@ const EventsPage: React.FC = () => {
             <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-red-700 transition-colors duration-200">
               Contact Our Team
             </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Event Statistics */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div className="p-6">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {baseEvents.length}
-              </div>
-              <div className="text-gray-600 font-medium">Total Events</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {totalAttendees.toLocaleString()}
-              </div>
-              <div className="text-gray-600 font-medium">People Engaged</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {upcomingEvents.length}
-              </div>
-              <div className="text-gray-600 font-medium">Upcoming Events</div>
-            </div>
-            <div className="p-6">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {new Set(baseEvents.map(event => event.location.split(',')[1] || event.location)).size}
-              </div>
-              <div className="text-gray-600 font-medium">Locations Visited</div>
-            </div>
           </div>
         </div>
       </section>

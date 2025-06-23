@@ -278,7 +278,7 @@ const NewsPage = () => {
   );
 
   return (
-    <div className="py-12">
+    <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -388,48 +388,6 @@ const NewsPage = () => {
               <p className="text-gray-500 text-lg">No content available in this category.</p>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Media Statistics */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Media Presence
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Our commitment to transparency and public engagement through media
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {newsArticles.length}
-              </div>
-              <div className="text-gray-600 font-medium">News Articles</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {interviews.length}
-              </div>
-              <div className="text-gray-600 font-medium">Interviews</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {(newsArticles.reduce((sum, article) => sum + article.views, 0) + 
-                  interviews.reduce((sum, interview) => sum + interview.views, 0)).toLocaleString()}
-              </div>
-              <div className="text-gray-600 font-medium">Total Views</div>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-md">
-              <div className="text-4xl font-bold text-red-600 mb-2">
-                {new Set([...newsArticles.map(a => a.source), ...interviews.map(i => i.platform)]).size}
-              </div>
-              <div className="text-gray-600 font-medium">Media Outlets</div>
-            </div>
-          </div>
         </div>
       </section>
 
