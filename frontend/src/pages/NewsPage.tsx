@@ -1,4 +1,4 @@
-import { Calendar, User, Eye, ArrowRight, Newspaper, Mic, Play, Share2 } from 'lucide-react';
+import { Calendar, ArrowRight, Newspaper, Mic, Play, Share2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface NewsArticle {
@@ -6,13 +6,11 @@ interface NewsArticle {
   title: string;
   excerpt: string;
   date: string;
-  readTime: string;
   category: string;
-  type: string;
-  views: number;
   featured: boolean;
   image: string;
   source: string;
+  link: string;
 }
 
 interface Interview {
@@ -20,17 +18,11 @@ interface Interview {
   title: string;
   excerpt: string;
   date: string;
-  duration: string;
   category: string;
-  type: string;
   platform: string;
-  interviewer: string;
-  views: number;
   featured: boolean;
   image: string;
-  videoUrl?: string;
-  audioUrl?: string;
-  topics: string[];
+  link: string;
 }
 
 const NewsPage = () => {
@@ -43,39 +35,11 @@ const NewsPage = () => {
       title: "Ranjit Tamang Calls for Educational Reform in National Assembly",
       excerpt: "In a passionate speech at the National Assembly, Ranjit Tamang outlined comprehensive plans for making quality education accessible to all Nepali citizens.",
       date: "2025-06-18",
-      readTime: "5 min read",
       category: "news",
-      type: "political",
-      views: 2840,
       featured: true,
       image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&h=400&fit=crop",
-      source: "The Kathmandu Post"
-    },
-    {
-      id: 2,
-      title: "Healthcare Accessibility: A Fundamental Right, Says Tamang",
-      excerpt: "During a community health forum in Kathmandu, Ranjit Tamang emphasized the importance of universal healthcare coverage for all citizens.",
-      date: "2025-06-12",
-      readTime: "4 min read",
-      category: "news",
-      type: "healthcare",
-      views: 1956,
-      featured: false,
-      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600&h=400&fit=crop",
-      source: "The Himalayan Times"
-    },
-    {
-      id: 3,
-      title: "Youth Leadership Summit: Empowering the Next Generation",
-      excerpt: "Hundreds of young leaders gathered at Tribhuvan University to discuss the future of Nepal's democratic institutions.",
-      date: "2025-06-08",
-      readTime: "6 min read",
-      category: "news",
-      type: "youth",
-      views: 3241,
-      featured: false,
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop",
-      source: "Republica"
+      source: "The Kathmandu Post",
+      link: "https://kathmandupost.com/politics/2025/06/18/educational-reform-assembly"
     }
   ];
 
@@ -85,48 +49,11 @@ const NewsPage = () => {
       title: "In Conversation: Ranjit Tamang on Nepal's Democratic Future",
       excerpt: "An in-depth discussion about progressive politics, social justice, and the role of youth in Nepal's transformation.",
       date: "2025-06-20",
-      duration: "45 min",
       category: "interview",
-      type: "tv",
       platform: "Nepal Television",
-      interviewer: "Sangita Pradhan",
-      views: 15420,
-      featured: true,
+      featured: false,
       image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop",
-      videoUrl: "#",
-      topics: ["Democracy", "Youth Empowerment", "Social Justice", "Educational Reform"]
-    },
-    {
-      id: 2,
-      title: "Radio Interview: Grassroots Politics and Community Engagement",
-      excerpt: "A candid conversation about the importance of staying connected with local communities and understanding grassroots issues.",
-      date: "2025-06-15",
-      duration: "30 min",
-      category: "interview",
-      type: "radio",
-      platform: "Radio Nepal",
-      interviewer: "Binod Ghimire",
-      views: 8750,
-      featured: false,
-      image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=600&h=400&fit=crop",
-      audioUrl: "#",
-      topics: ["Community Development", "Local Politics", "Grassroots Engagement"]
-    },
-    {
-      id: 3,
-      title: "Podcast: The Future of Nepal's Healthcare System",
-      excerpt: "Discussing healthcare policy, universal coverage, and the challenges facing Nepal's medical infrastructure.",
-      date: "2025-06-10",
-      duration: "38 min",
-      category: "interview",
-      type: "podcast",
-      platform: "Nepal Policy Podcast",
-      interviewer: "Dr. Ramesh Adhikari",
-      views: 5630,
-      featured: false,
-      image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=400&fit=crop",
-      audioUrl: "#",
-      topics: ["Healthcare Policy", "Universal Coverage", "Medical Infrastructure", "Rural Healthcare"]
+      link: "https://youtube.com/watch?v=dQw4w9WgXcQ"
     }
   ];
 
@@ -156,6 +83,11 @@ const NewsPage = () => {
     });
   };
 
+  const handleNavigation = (link: string) => {
+    // Open external links in a new tab
+    window.open(link, '_blank', 'noopener,noreferrer');
+  };
+
   const NewsCard = ({ article }: { article: NewsArticle }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative">
@@ -171,20 +103,11 @@ const NewsPage = () => {
             </span>
           </div>
         )}
-        <div className="absolute top-4 right-4">
-          <span className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-            {article.readTime}
-          </span>
-        </div>
       </div>
       
       <div className="p-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3">
           <span className="text-sm text-red-600 font-medium">{article.source}</span>
-          <div className="flex items-center text-gray-500 text-sm">
-            <Eye className="h-4 w-4 mr-1" />
-            {article.views}
-          </div>
         </div>
         
         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">{article.title}</h3>
@@ -196,7 +119,10 @@ const NewsPage = () => {
             {formatDate(article.date)}
           </div>
           
-          <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200">
+          <button 
+            onClick={() => handleNavigation(article.link)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
+          >
             Read More
             <ArrowRight className="h-4 w-4 ml-2" />
           </button>
@@ -220,11 +146,6 @@ const NewsPage = () => {
             </span>
           </div>
         )}
-        <div className="absolute top-4 right-4">
-          <span className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-            {interview.duration}
-          </span>
-        </div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-red-600 bg-opacity-80 hover:bg-opacity-90 rounded-full p-4 transition-all duration-200">
             <Play className="h-8 w-8 text-white" />
@@ -233,30 +154,12 @@ const NewsPage = () => {
       </div>
       
       <div className="p-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3">
           <span className="text-sm text-red-600 font-medium">{interview.platform}</span>
-          <div className="flex items-center text-gray-500 text-sm">
-            <Eye className="h-4 w-4 mr-1" />
-            {interview.views}
-          </div>
         </div>
         
         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">{interview.title}</h3>
         <p className="text-gray-600 mb-4 line-clamp-3">{interview.excerpt}</p>
-        
-        <div className="mb-4">
-          <div className="flex items-center text-gray-500 text-sm mb-2">
-            <User className="h-4 w-4 mr-1" />
-            Interviewer: {interview.interviewer}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {interview.topics.slice(0, 3).map((topic, index) => (
-              <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                {topic}
-              </span>
-            ))}
-          </div>
-        </div>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center text-gray-500 text-sm">
@@ -264,7 +167,10 @@ const NewsPage = () => {
             {formatDate(interview.date)}
           </div>
           
-          <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200">
+          <button 
+            onClick={() => handleNavigation(interview.link)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
+          >
             Watch
             <Play className="h-4 w-4 ml-2" />
           </button>

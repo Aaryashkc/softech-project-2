@@ -1,125 +1,59 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Calendar, MapPin, Clock } from 'lucide-react';
 
-type EventType = 'forum' | 'summit' | 'rally' | 'meeting' | 'community' | 'official' | 'workshop' | 'dialogue';
-
-interface EventBase {
+interface Event {
   id: number;
   title: string;
   date: string;
   time: string;
   location: string;
-  type: EventType;
   description: string;
-  attendees: number;
   image: string;
 }
 
-interface EventWithStatus extends EventBase {
+interface EventWithStatus extends Event {
   status: 'upcoming' | 'completed';
 }
 
 const EventsPage: React.FC = () => {
-  const [activeFilter, setActiveFilter] = useState<EventType | 'all'>('all');
-
-  // Demo data - this will be replaced with backend data later
-  const baseEvents: EventBase[] = [
+  // Demo data - only one event
+  const events: Event[] = [
     {
       id: 1,
       title: "Community Healthcare Forum",
       date: "2025-06-15",
       time: "10:00 AM",
       location: "Kathmandu Community Center",
-      type: "forum",
       description: "Join us for an open discussion on improving healthcare access in rural communities across Nepal.",
-      attendees: 150,
       image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=250&fit=crop"
     },
     {
-      id: 2,
-      title: "Youth Leadership Summit",
-      date: "2025-07-22",
-      time: "9:00 AM",
-      location: "Tribhuvan University, Kirtipur",
-      type: "summit",
-      description: "Empowering the next generation of leaders through education, mentorship, and political engagement.",
-      attendees: 300,
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=250&fit=crop"
+      id: 1,
+      title: "Community Healthcare Forum",
+      date: "2025-07-15",
+      time: "10:00 AM",
+      location: "Kathmandu Community Center",
+      description: "Join us for an open discussion on improving healthcare access in rural communities across Nepal.",
+      image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop"
     },
-    {
-      id: 3,
-      title: "Education Reform Rally",
-      date: "2025-08-05",
-      time: "2:00 PM",
-      location: "Ratna Park, Kathmandu",
-      type: "rally",
-      description: "Standing together for free, quality education accessible to every Nepali citizen.",
-      attendees: 500,
-      image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=250&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Grassroots Dialogue Series",
-      date: "2025-06-10",
-      time: "4:00 PM",
-      location: "Bhaktapur Durbar Square",
-      type: "dialogue",
-      description: "Direct conversation with citizens about local issues and community development initiatives.",
-      attendees: 80,
-      image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=250&fit=crop"
-    },
-    {
-      id: 5,
-      title: "Social Justice Workshop",
-      date: "2025-06-01",
-      time: "11:00 AM",
-      location: "Nepal Academy Hall",
-      type: "workshop",
-      description: "Building awareness and strategies for creating a more equitable society in Nepal.",
-      attendees: 120,
-      image: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=400&h=250&fit=crop"
-    },
-    {
-      id: 6,
-      title: "Party Central Committee Meeting",
-      date: "2025-07-30",
-      time: "1:00 PM",
-      location: "CPN Maoist Centre Office",
-      type: "meeting",
-      description: "Strategic planning session for upcoming policy initiatives and organizational development.",
-      attendees: 45,
-      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=250&fit=crop"
-    }
   ];
 
-  // Process events with status and filter
+  // Process events with status
   const { upcomingEvents, completedEvents } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const eventsWithStatus = baseEvents
-      .filter(event => activeFilter === 'all' || event.type === activeFilter)
-      .map(event => {
-        const eventDate = new Date(event.date);
-        const status = eventDate >= today ? 'upcoming' : 'completed';
-        return { ...event, status } as EventWithStatus;
-      });
+    const eventsWithStatus = events.map(event => {
+      const eventDate = new Date(event.date);
+      const status = eventDate >= today ? 'upcoming' : 'completed';
+      return { ...event, status } as EventWithStatus;
+    });
 
     return {
       upcomingEvents: eventsWithStatus.filter(event => event.status === 'upcoming'),
       completedEvents: eventsWithStatus.filter(event => event.status === 'completed')
     };
-  }, [activeFilter]);
-
-  const eventTypes = [
-    { key: 'all', label: 'All Events' },
-    { key: 'forum', label: 'Forums' },
-    { key: 'summit', label: 'Summits' },
-    { key: 'rally', label: 'Rallies' },
-    { key: 'dialogue', label: 'Dialogues' },
-    { key: 'workshop', label: 'Workshops' },
-    { key: 'meeting', label: 'Meetings' }
-  ];
+  }, []);
 
   // Format date for display
   const formatDate = (dateStr: string): string => {
@@ -153,9 +87,6 @@ const EventsPage: React.FC = () => {
       
       <div className="p-6 flex-1 flex flex-col">
         <div className="mb-3">
-          <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide mb-2">
-            {event.type}
-          </span>
           <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
         </div>
         
@@ -173,14 +104,6 @@ const EventsPage: React.FC = () => {
           <div className="flex items-start text-gray-600">
             <MapPin className="h-4 w-4 mr-2 text-red-600 mt-0.5 flex-shrink-0" />
             <span className="text-sm">{event.location}</span>
-          </div>
-          <div className="flex items-center text-gray-600">
-            <Users className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
-            <span className="text-sm">
-              {event.status === 'upcoming' 
-                ? `Expected: ${event.attendees}+ attendees` 
-                : `Attended by ${event.attendees} people`}
-            </span>
           </div>
         </div>
       </div>
@@ -203,66 +126,49 @@ const EventsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Event Filters */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            {eventTypes.map((type) => (
-              <button
-                key={type.key}
-                onClick={() => setActiveFilter(type.key as EventType | 'all')}
-                className={`px-6 py-2 rounded-full font-medium transition-colors duration-200 ${
-                  activeFilter === type.key
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {type.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Upcoming Events */}
-      <section className={`py-16 ${upcomingEvents.length > 0 ? 'bg-gray-50' : 'hidden'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Upcoming Events</h2>
-            <div className="w-20 h-1 bg-red-600 mx-auto"></div>
-            {upcomingEvents.length === 0 && (
-              <p className="mt-4 text-gray-500">No upcoming events at the moment. Check back soon!</p>
-            )}
-          </div>
-          {upcomingEvents.length > 0 && (
+      {upcomingEvents.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Upcoming Events</h2>
+              <div className="w-20 h-1 bg-red-600 mx-auto"></div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {upcomingEvents.map(event => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Past Events */}
-      <section className={`py-16 ${completedEvents.length > 0 ? 'bg-white' : 'hidden'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Past Events</h2>
-            <div className="w-20 h-1 bg-red-600 mx-auto"></div>
-            {completedEvents.length === 0 && (
-              <p className="mt-4 text-gray-500">No past events to display.</p>
-            )}
-          </div>
-          {completedEvents.length > 0 && (
+      {completedEvents.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Past Events</h2>
+              <div className="w-20 h-1 bg-red-600 mx-auto"></div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {completedEvents.map(event => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
+
+      {/* Show message if no events */}
+      {upcomingEvents.length === 0 && completedEvents.length === 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">No Events Available</h2>
+            <p className="text-gray-600">Check back soon for upcoming events and engagements.</p>
+          </div>
+        </section>
+      )}
 
       {/* Call to Action */}
       <section className="py-20 bg-red-700">
