@@ -11,6 +11,10 @@ import NewsPage from "./pages/NewsPage"
 import Gallery from "./pages/Gallery"
 import { Toaster } from "react-hot-toast"
 import AdminDashboard from "./admin/pages/Dashboard"
+import EventManagement from "./admin/pages/EventManagement"
+import GalleryManagement from "./admin/pages/GalleryManagement"
+import InterviewManagement from "./admin/pages/InterviewManagement"
+import NewsManagement from "./admin/pages/NewsManagement"
 
 function App() {
   const location = useLocation();
@@ -31,6 +35,10 @@ function App() {
 
           {/* admin routes */}
           <Route path="/admin" element={<AdminDashboard />}/>
+          <Route path="/eventmanagement" element={<EventManagement />}/>
+          <Route path="/gallerymanagement" element={<GalleryManagement />}/>
+          <Route path="/interviewmanagement" element={<InterviewManagement />}/>
+          <Route path="/newsmanagement" element={<NewsManagement />}/>
 
         </Routes>
       </main>
