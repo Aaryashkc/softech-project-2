@@ -4,6 +4,7 @@ import EventManagement from './EventManagement';
 import GalleryManagement from './GalleryManagement';
 import NewsManagement from './NewsManagement';
 import InterviewManagement from './InterviewManagement';
+import toast from 'react-hot-toast';
 
 // Types
 type SectionType = 'events' | 'gallery' | 'news' | 'interviews';
@@ -76,6 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer */}
       <div className="p-4 border-t border-gray-700">
         <button
+          onClick={()=> toast.success('Logged out successfully!')}
           className="w-full flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg transition-colors text-gray-300"
           title={isCollapsed ? 'Logout' : ''}
         >
