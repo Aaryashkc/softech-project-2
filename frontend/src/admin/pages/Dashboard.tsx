@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/useAuthStore';
 import EventManagement from './EventManagement';
 import GalleryManagement from './GalleryManagement';
 import NewsManagement from './NewsManagement';
@@ -23,6 +25,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed, 
   onToggleCollapse 
 }) => {
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/admin/login');
+    } catch (error) {
+      toast.error('Failed to log out');
+    }
+  };
+
   const menuItems = [
     { id: 'events' as SectionType, label: 'Manage Events', icon: Calendar },
     { id: 'gallery' as SectionType, label: 'Gallery Manager', icon: Image },
@@ -48,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -74,11 +89,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         </ul>
       </nav>
 
-      {/* Footer */}
+      {/* Logout Button */}
       <div className="p-4 border-t border-gray-700">
         <button
-          onClick={()=> toast.success('Logged out successfully!')}
-          className="w-full flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg transition-colors text-gray-300"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 p-3 hover:bg-red-900/20 rounded-lg transition-colors text-red-400"
           title={isCollapsed ? 'Logout' : ''}
         >
           <LogOut size={20} />

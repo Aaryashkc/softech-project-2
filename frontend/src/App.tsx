@@ -1,4 +1,5 @@
-import { Route, Routes, useLocation } from "react-router-dom"
+import type React from "react"
+import { Navigate, Route, Routes, useLocation } from "react-router-dom"
 import Footer from "./components/Footer"
 import Navbar from "./components/Navbar"
 import HomePage from "./pages/HomePage"
@@ -15,10 +16,33 @@ import EventManagement from "./admin/pages/EventManagement"
 import GalleryManagement from "./admin/pages/GalleryManagement"
 import InterviewManagement from "./admin/pages/InterviewManagement"
 import NewsManagement from "./admin/pages/NewsManagement"
+import AdminLogin from "./admin/auth/AdminLogin"
+import { useAuthStore } from "./stores/useAuthStore"
+import { useEffect } from "react"
+import { LoaderCircle } from "lucide-react"
 
-function App() {
+const App: React.FC = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const {
+    authUser,
+    checkAuth,
+    isCheckingAuth
+  } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  console.log(authUser);
+
+  if (isCheckingAuth && !authUser) {
+    return (
+      <div className='flex justify-center items-center h-screen'>
+        <LoaderCircle className='size-20 animate-spin text-red-700' />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {!isAdminRoute && <Navbar />}
@@ -34,15 +58,16 @@ function App() {
           <Route path="/contact" element={<Contact />} />
 
           {/* admin routes */}
-          <Route path="/admin" element={<AdminDashboard />}/>
-          <Route path="/eventmanagement" element={<EventManagement />}/>
-          <Route path="/gallerymanagement" element={<GalleryManagement />}/>
-          <Route path="/interviewmanagement" element={<InterviewManagement />}/>
-          <Route path="/newsmanagement" element={<NewsManagement />}/>
+          <Route path="/admin" element={authUser? <AdminDashboard /> :<Navigate to="/admin/login" />} />
+          <Route path="/admin/login" element={!authUser?<AdminLogin />:<Navigate to="/admin" />}/>
+          <Route path="/eventmanagement" element={authUser?<EventManagement />:<Navigate to="/admin/login" />}/>
+          <Route path="/gallerymanagement" element={authUser?<GalleryManagement />:<Navigate to="/admin/login" />}/>
+          <Route path="/interviewmanagement" element={authUser?<InterviewManagement />:<Navigate to="/admin/login" />}/>
+          <Route path="/newsmanagement" element={authUser?<NewsManagement />:<Navigate to="/admin/login" />}/>
 
         </Routes>
       </main>
-      <Footer />
+      {!isAdminRoute && <Footer />}
       <Toaster/>
     </div>
   )
