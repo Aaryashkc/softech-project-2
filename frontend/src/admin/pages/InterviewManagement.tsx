@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Eye, Calendar, Tag, Monitor, Star, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Interview interface
 interface Interview {
@@ -78,10 +79,10 @@ const InterviewManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">Interview Management</h1>
           <p className="text-gray-600 mt-1">Manage and organize your interviews</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+        <Link to="/admin/add-interview" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
           <Plus size={20} />
           Add New Interview
-        </button>
+        </Link>
       </div>
 
       {/* Interviews Grid */}

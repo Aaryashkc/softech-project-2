@@ -20,6 +20,10 @@ import AdminLogin from "./admin/auth/AdminLogin"
 import { useAuthStore } from "./stores/useAuthStore"
 import { useEffect } from "react"
 import { LoaderCircle } from "lucide-react"
+import AddEventPage from "./admin/components/AddEventPage"
+import AddGalleryPage from "./admin/components/AddGalleryPage"
+import AddInterviewPage from "./admin/components/AddInterviewPage"
+import AddNewsPage from "./admin/components/AddNewsPage"
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -64,7 +68,11 @@ const App: React.FC = () => {
           <Route path="/gallerymanagement" element={authUser?<GalleryManagement />:<Navigate to="/admin/login" />}/>
           <Route path="/interviewmanagement" element={authUser?<InterviewManagement />:<Navigate to="/admin/login" />}/>
           <Route path="/newsmanagement" element={authUser?<NewsManagement />:<Navigate to="/admin/login" />}/>
-
+          {/* pages  */}
+          <Route path="/admin/add-event" element={authUser?<AddEventPage />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin/add-gallery" element={authUser?<AddGalleryPage />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin/add-interview" element={authUser?<AddInterviewPage />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin/add-news" element={authUser?<AddNewsPage />:<Navigate to="/admin/login" />}/>
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
