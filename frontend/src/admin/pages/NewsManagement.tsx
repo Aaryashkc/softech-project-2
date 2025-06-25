@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Calendar, Tag, Newspaper, Star, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Edit, Trash2, Eye, Calendar, Tag, Newspaper, Star, ExternalLink } from 'lucide-react';
 
 // NewsArticle interface
 interface NewsArticle {
@@ -79,10 +78,6 @@ const NewsManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">News Management</h1>
           <p className="text-gray-600 mt-1">Manage and organize your news articles</p>
         </div>
-        <Link to="/admin/add-news" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-          <Plus size={20} />
-          Add New News
-        </Link>
       </div>
 
       {/* News Articles Grid */}

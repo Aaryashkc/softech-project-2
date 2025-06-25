@@ -7,9 +7,7 @@ import connectDB from './lib/mongodb.js';
 
 // routes 
 import authRoutes from './routes/auth.route.js';
-
-
-dotenv.config()
+import eventRoutes from './routes/event.route.js';
 
 const port= process.env.PORT;
 const app = express();
@@ -23,6 +21,8 @@ app.use(cors({
 ))
 
 app.use('/api/auth', authRoutes)
+app.use('/api/events', eventRoutes)
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   connectDB();

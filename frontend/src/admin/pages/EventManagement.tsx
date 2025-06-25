@@ -1,45 +1,28 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Calendar, MapPin, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Edit, Trash2, Eye, Calendar, MapPin, Clock, X } from 'lucide-react';
+import { useEventStore, type EventType } from '../../stores/useEventStore';
 
-// Event interface
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  description: string;
-  image: string;
+interface Event extends Omit<EventType, '_id'> {
+  _id: string;
 }
 
-// Sample events data
-const sampleEvents: Event[] = [
-  {
-    id: 1,
-    title: "Annual Tech Conference 2025",
-    date: "2025-07-15",
-    time: "09:00",
-    location: "Convention Center, Downtown",
-    description: "Join us for the biggest tech conference of the year featuring keynote speakers, workshops, and networking opportunities.",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop"
-  },
-  {
-    id: 2,
-    title: "Summer Music Festival",
-    date: "2025-08-20",
-    time: "18:00",
-    location: "Central Park Amphitheater",
-    description: "Experience an evening of live music with local and international artists performing across multiple stages.",
-    image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=250&fit=crop"
-  }
-];
-
 const EventManagement: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>(sampleEvents);
+  const { events, isLoading, fetchEvents, deleteEvent } = useEventStore();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Fetch events on component mount
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        await fetchEvents();
+      } catch (error) {
+      }
+    };
+
+    loadEvents();
+  }, [fetchEvents]);
 
   // Handle view event
   const handleViewEvent = (event: Event) => {
@@ -54,19 +37,30 @@ const EventManagement: React.FC = () => {
   };
 
   // Handle delete event
-  const handleDeleteEvent = (eventId: number) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
-      setEvents(events.filter(event => event.id !== eventId));
+      try {
+        await deleteEvent(eventId);
+      } catch (error) {
+      }
     }
   };
 
   // Handle save edit
-  const handleSaveEdit = (updatedEvent: Event) => {
-    setEvents(events.map(event => 
-      event.id === updatedEvent.id ? updatedEvent : event
-    ));
-    setShowEditModal(false);
-    setSelectedEvent(null);
+  const handleSaveEdit = async (updatedEvent: Event) => {
+    try {
+      await useEventStore.getState().updateEvent(updatedEvent._id, {
+        title: updatedEvent.title,
+        date: updatedEvent.date,
+        time: updatedEvent.time,
+        location: updatedEvent.location,
+        description: updatedEvent.description,
+        image: updatedEvent.image
+      });
+      setShowEditModal(false);
+      setSelectedEvent(null);
+    } catch (error) {
+    }
   };
 
   // Format date for display
@@ -94,16 +88,12 @@ const EventManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">Event Management</h1>
           <p className="text-gray-600 mt-1">Manage and organize your events</p>
         </div>
-        <Link to="/admin/add-event" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-          <Plus size={20} />
-          Add New Event
-        </Link>
       </div>
 
       {/* Events Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
-          <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={event._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
             {/* Event Image */}
             <div className="h-48 bg-gray-200 overflow-hidden">
               <img
@@ -150,13 +140,15 @@ const EventManagement: React.FC = () => {
                 <button
                   onClick={() => handleEditEvent(event)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  disabled={isLoading}
                 >
                   <Edit size={16} />
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDeleteEvent(event.id)}
+                  onClick={() => handleDeleteEvent(event._id)}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  disabled={isLoading}
                 >
                   <Trash2 size={16} />
                   Delete
@@ -271,7 +263,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
               onClick={onCancel}
               className="text-gray-500 hover:text-gray-700"
             >
-              ×
+              <X size={20} />
             </button>
           </div>
 
