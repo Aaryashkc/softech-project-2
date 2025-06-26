@@ -80,14 +80,18 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <li key={item.id}>
                   <button
                     onClick={() => onSectionChange(item.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                    className={`flex items-center rounded-lg transition-colors ${
+                      isCollapsed
+                        ? 'w-10 h-10 p-0 justify-center mx-auto'
+                        : 'w-full gap-3 p-3'
+                    } ${
                       activeSection === item.id
                         ? 'bg-blue-600 text-white'
                         : 'hover:bg-gray-800 text-gray-300'
                     }`}
                     title={isCollapsed ? item.label : ''}
                   >
-                    <Icon size={20} />
+                    <Icon size={isCollapsed ? 24 : 20} />
                     {!isCollapsed && (
                       <span className="font-medium">{item.label}</span>
                     )}
@@ -103,10 +107,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="sticky bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-gray-700">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 p-3 hover:bg-red-900/20 rounded-lg transition-colors text-red-400"
+          className={`rounded-lg transition-colors text-red-400 hover:bg-red-900/20 flex items-center ${
+            isCollapsed ? 'w-10 h-10 p-0 justify-center mx-auto' : 'w-full gap-3 p-3'
+          }`}
           title={isCollapsed ? 'Logout' : ''}
         >
-          <LogOut size={20} />
+          <LogOut size={isCollapsed ? 24 : 20} />
           {!isCollapsed && <span>Logout</span>}
         </button>
       </div>

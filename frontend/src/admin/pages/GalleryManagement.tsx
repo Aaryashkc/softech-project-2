@@ -119,16 +119,16 @@ const GalleryManagement: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Gallery Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Gallery Management</h1>
           <p className="text-gray-600 mt-1">Manage photo collections and albums</p>
         </div>
         <Link
           to="/admin/gallery/add"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
           Add New Gallery
@@ -136,11 +136,11 @@ const GalleryManagement: React.FC = () => {
       </div>
 
       {/* Collections Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {galleries.map((gallery) => (
-          <div key={gallery._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={gallery._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
             {/* Photo Preview Grid */}
-            <div className="h-48 bg-gray-200 overflow-hidden relative">
+            <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden relative">
               {gallery.images.length > 0 ? (
                 <div className="grid grid-cols-2 h-full gap-1">
                   {/* Main photo takes left half */}
@@ -154,7 +154,6 @@ const GalleryManagement: React.FC = () => {
                       }}
                     />
                   </div>
-                  
                   {/* Right side shows up to 3 more photos in a grid */}
                   <div className="grid grid-rows-2 gap-1">
                     {gallery.images.slice(1, 3).map((image, index) => (
@@ -169,7 +168,6 @@ const GalleryManagement: React.FC = () => {
                         />
                       </div>
                     ))}
-                    
                     {/* Show count overlay if more than 4 photos */}
                     {gallery.images.length > 4 && (
                       <div className="relative">
@@ -195,42 +193,37 @@ const GalleryManagement: React.FC = () => {
                   <Images size={48} className="text-gray-300" />
                 </div>
               )}
-              
               {/* Photo count badge */}
               <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
                 <Images size={14} />
                 {gallery.images.length}
               </div>
             </div>
-
             {/* Collection Content */}
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+            <div className="p-3 sm:p-4 flex flex-col flex-1">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
                 {gallery.title}
               </h3>
-              
-              <div className="flex items-center text-gray-600 text-sm mb-3">
+              <div className="flex items-center text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3">
                 <Calendar size={16} className="mr-2" />
                 {formatDate(gallery.createdAt)}
               </div>
-
-              <div className="flex items-start text-gray-600 text-sm mb-4">
+              <div className="flex items-start text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
                 <FileText size={16} className="mr-2 mt-0.5 flex-shrink-0" />
                 <p className="line-clamp-3">{gallery.description}</p>
               </div>
-
-                {/* Action Buttons */}
-              <div className="flex gap-2">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-2 mt-auto">
                 <button
                   onClick={() => handleViewGallery(gallery)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
                 >
                   <Eye size={16} />
                   View
                 </button>
                 <button
                   onClick={() => handleEditGallery(gallery)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
                   disabled={isDeleting}
                 >
                   <Edit size={16} />
@@ -239,7 +232,7 @@ const GalleryManagement: React.FC = () => {
                 <button
                   onClick={() => handleDeleteGallery(gallery._id)}
                   disabled={isDeleting}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
+                  className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                 >
                   {isDeleting ? (
                     <>
@@ -278,21 +271,20 @@ const GalleryManagement: React.FC = () => {
 
       {/* View Modal */}
       {showViewModal && selectedGallery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">{selectedGallery.title}</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{selectedGallery.title}</h2>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 self-end"
                 >
                   <X size={24} />
                 </button>
               </div>
-              
               <div className="mb-6">
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                   {selectedGallery.images.slice(0, 4).map((image, index) => (
                     <div key={index} className="relative aspect-square">
                       <img
@@ -314,7 +306,6 @@ const GalleryManagement: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
               <div className="mb-6">
                 <div className="flex items-center text-gray-700 mb-4">
                   <Calendar size={20} className="mr-3 text-blue-600" />
@@ -323,7 +314,6 @@ const GalleryManagement: React.FC = () => {
                     <p>{formatDate(selectedGallery.createdAt)}</p>
                   </div>
                 </div>
-                
                 <div>
                   <p className="font-medium text-gray-700 mb-2">Description</p>
                   <p className="text-gray-600">
@@ -331,7 +321,6 @@ const GalleryManagement: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
                   onClick={() => {
@@ -350,19 +339,18 @@ const GalleryManagement: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && selectedGallery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Gallery</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Edit Gallery</h2>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 self-end"
                 >
                   <X size={24} />
                 </button>
               </div>
-
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,7 +369,6 @@ const GalleryManagement: React.FC = () => {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -398,13 +385,11 @@ const GalleryManagement: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Images ({selectedGallery.images.length})
                   </label>
-                  
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
                     <input
                       type="url"
                       value={currentImageUrl}
@@ -421,7 +406,6 @@ const GalleryManagement: React.FC = () => {
                       Add Image
                     </button>
                   </div>
-
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {selectedGallery.images.map((image, index) => (
                       <div key={index} className="relative group">
@@ -445,8 +429,7 @@ const GalleryManagement: React.FC = () => {
                     ))}
                   </div>
                 </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}

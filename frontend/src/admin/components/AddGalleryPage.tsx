@@ -166,19 +166,19 @@ const AddGalleryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-6 px-2 sm:py-8 sm:px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Image className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Gallery</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Create New Gallery</h1>
           <p className="text-gray-600">Create a beautiful gallery with multiple images</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-8">
           <div className="space-y-6">
             <InputField
               label="Gallery Title"
@@ -224,7 +224,7 @@ const AddGalleryPage: React.FC = () => {
                 Add Images
                 <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="url"
                   value={currentImageUrl}
@@ -243,7 +243,7 @@ const AddGalleryPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={addImageUrl}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center gap-2 justify-center"
                 >
                   <Plus className="w-4 h-4" />
                   Add
@@ -269,13 +269,13 @@ const AddGalleryPage: React.FC = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Gallery Preview ({formData.images.length} image{formData.images.length !== 1 ? 's' : ''})
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 p-2 sm:p-4 bg-gray-50 rounded-lg">
                   {formData.images.map((imageUrl, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={imageUrl}
                         alt={`Gallery image ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg shadow-sm"
+                        className="w-full h-24 sm:h-32 object-cover rounded-lg shadow-sm"
                         onError={(e) => {
                           e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
                         }}
@@ -298,7 +298,7 @@ const AddGalleryPage: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <div className="flex gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 sm:pt-6">
               <button
                 type="button"
                 onClick={() => {
@@ -310,7 +310,7 @@ const AddGalleryPage: React.FC = () => {
                   setCurrentImageUrl('');
                   setErrors({});
                 }}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 disabled={isLoading}
               >
                 Clear Form
@@ -318,7 +318,7 @@ const AddGalleryPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full sm:flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -337,7 +337,7 @@ const AddGalleryPage: React.FC = () => {
         </form>
 
         {/* Tips */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-6 sm:mt-8 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
           <h3 className="font-medium text-blue-900 mb-2">🎨 Gallery Tips:</h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Use high-quality image URLs for the best gallery experience</li>
