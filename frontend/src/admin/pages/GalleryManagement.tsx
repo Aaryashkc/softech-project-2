@@ -126,13 +126,6 @@ const GalleryManagement: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Gallery Management</h1>
           <p className="text-gray-600 mt-1">Manage photo collections and albums</p>
         </div>
-        <Link
-          to="/admin/gallery/add"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center"
-        >
-          <Plus size={18} />
-          Add New Gallery
-        </Link>
       </div>
 
       {/* Collections Grid */}

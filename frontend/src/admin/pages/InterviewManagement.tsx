@@ -1,37 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Eye, Calendar, Tag, Monitor, Star, ExternalLink } from 'lucide-react';
+import { useInterviewStore } from '../../stores/useInterviewStore';
+import type { Interview as StoreInterview } from '../../stores/useInterviewStore';
 
-// Interview interface
-interface Interview {
-  id: number;
-  title: string;
-  excerpt: string;
-  date: string;
-  category: string;
-  platform: string;
-  featured: boolean;
-  image: string;
-  link: string;
-}
+// Component-specific Interview type that includes both id and _id
+type Interview = Omit<StoreInterview, '_id'> & { id: string; _id?: string };
 
-// Sample interview data
-const sampleInterview: Interview = {
-  id: 1,
-  title: "Tech Leadership in 2025: Navigating AI and Remote Teams",
-  excerpt: "An in-depth discussion about the future of technology leadership, exploring how AI tools are reshaping development workflows and the challenges of managing distributed teams in the post-pandemic era.",
-  date: "2025-06-15",
-  category: "Technology",
-  platform: "TechTalk Podcast",
-  featured: true,
-  image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=250&fit=crop",
-  link: "https://techtalk.example.com/interview/tech-leadership-2025"
-};
+// Convert store interview to component interview
+const toComponentInterview = (interview: StoreInterview): Interview => ({
+  ...interview,
+  id: interview._id,
+  _id: interview._id,
+});
+
+// Convert component interview back to store interview input
+const toStoreInterview = (interview: Interview): Omit<StoreInterview, '_id'> & { _id: string } => ({
+  ...interview,
+  _id: interview._id || interview.id,
+});
 
 const InterviewManagement: React.FC = () => {
-  const [interviews, setInterviews] = useState<Interview[]>([sampleInterview]);
+  const { 
+    interviews: storeInterviews, 
+    isLoading, 
+    fetchInterviews, 
+    deleteInterview,
+    updateInterview 
+  } = useInterviewStore();
+  
+  // Convert store interviews to component interviews
+  const interviews = storeInterviews.map(toComponentInterview);
+  
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Fetch interviews on component mount
+  useEffect(() => {
+    fetchInterviews();
+  }, [fetchInterviews]);
 
   // Handle view interview
   const handleViewInterview = (interview: Interview) => {
@@ -46,28 +53,43 @@ const InterviewManagement: React.FC = () => {
   };
 
   // Handle delete interview
-  const handleDeleteInterview = (interviewId: number) => {
+  const handleDeleteInterview = async (interview: Interview) => {
     if (window.confirm('Are you sure you want to delete this interview?')) {
-      setInterviews(interviews.filter(interview => interview.id !== interviewId));
+      try {
+        await deleteInterview(interview._id || interview.id);
+      } catch (error) {
+        console.error('Error deleting interview:', error);
+      }
     }
   };
 
   // Handle save edit
-  const handleSaveEdit = (updatedInterview: Interview) => {
-    setInterviews(interviews.map(interview => 
-      interview.id === updatedInterview.id ? updatedInterview : interview
-    ));
-    setShowEditModal(false);
-    setSelectedInterview(null);
+  const handleSaveEdit = async (updatedInterview: Interview) => {
+    if (!updatedInterview.id) return;
+    
+    try {
+      const storeInterview = toStoreInterview(updatedInterview);
+      await updateInterview(storeInterview._id, storeInterview);
+      setShowEditModal(false);
+      setSelectedInterview(null);
+    } catch (error) {
+      console.error('Error updating interview:', error);
+    }
   };
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -80,78 +102,83 @@ const InterviewManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Interviews Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {interviews.map((interview) => (
-          <div key={interview.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-            {/* Interview Image */}
-            <div className="h-48 bg-gray-200 overflow-hidden relative">
-              <img
-                src={interview.image}
-                alt={interview.title}
-                className="w-full h-full object-cover"
-              />
-              {interview.featured && (
-                <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                  <Star size={12} />
-                  Featured
-                </div>
-              )}
-            </div>
-
-            {/* Interview Content */}
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                {interview.title}
-              </h3>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Calendar size={16} className="mr-2" />
-                  {formatDate(interview.date)}
-                </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Tag size={16} className="mr-2" />
-                  {interview.category}
-                </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Monitor size={16} className="mr-2" />
-                  {interview.platform}
-                </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {interviews.map((interview) => (
+            <div key={interview.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              {/* Interview Image */}
+              <div className="h-48 bg-gray-200 overflow-hidden relative">
+                <img
+                  src={interview.image}
+                  alt={interview.title}
+                  className="w-full h-full object-cover"
+                />
+                {interview.featured && (
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                    <Star size={12} />
+                    Featured
+                  </div>
+                )}
               </div>
 
-              <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                {interview.excerpt}
-              </p>
+              {/* Interview Content */}
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+                  {interview.title}
+                </h3>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Calendar size={16} className="mr-2" />
+                    {formatDate(interview.date)}
+                  </div>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Tag size={16} className="mr-2" />
+                    {interview.category}
+                  </div>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Monitor size={16} className="mr-2" />
+                    {interview.platform}
+                  </div>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleViewInterview(interview)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Eye size={16} />
-                  View
-                </button>
-                <button
-                  onClick={() => handleEditInterview(interview)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Edit size={16} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteInterview(interview.id)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
+                <p className="text-gray-700 text-sm mb-4 line-clamp-3">
+                  {interview.excerpt}
+                </p>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewInterview(interview)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Eye size={16} />
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleEditInterview(interview)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Edit size={16} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteInterview(interview)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* View Modal */}
       {showViewModal && selectedInterview && (
@@ -247,16 +274,24 @@ const InterviewManagement: React.FC = () => {
 
 // Edit Interview Modal Component
 interface EditInterviewModalProps {
-  interview: Interview;
+  interview: Interview | null;
   onSave: (interview: Interview) => void;
   onCancel: () => void;
 }
 
 const EditInterviewModal: React.FC<EditInterviewModalProps> = ({ interview, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<Interview>({ ...interview });
+  if (!interview) return null;
+  const [formData, setFormData] = useState<Interview>({
+    ...interview,
+    id: interview.id || interview._id || '',
+  });
 
   const handleSubmit = () => {
-    onSave(formData);
+    onSave({
+      ...formData,
+      id: formData.id || formData._id || '',
+      _id: formData._id || formData.id || '',
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
