@@ -1,79 +1,122 @@
-import React, { useState } from 'react';
-import { Edit, Trash2, Images, Calendar, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit, Trash2, Images, Calendar, FileText, Plus, Loader2, X, Eye } from 'lucide-react';
+import { useGalleryStore, type GalleryType } from '../../stores/useGalleryStore';
+import { toast } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
-// PhotoCollection interface
-interface PhotoCollection {
-  id: number;
-  title: string;
-  description: string;
-  createdAt: string;
-  photos: string[];
+interface GalleryWithId extends Omit<GalleryType, '_id'> {
+  _id: string;
 }
 
-// Sample gallery data
-const sampleCollections: PhotoCollection[] = [
-  {
-    id: 1,
-    title: "Tech Conference 2025 Highlights",
-    description: "Key moments and networking sessions from our annual tech conference including keynote speeches and workshop activities.",
-    createdAt: "2025-06-20",
-    photos: [
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1559223607-b4d0555ae227?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1551818255-e6e10975bc17?w=300&h=200&fit=crop"
-    ]
-  },
-  {
-    id: 2,
-    title: "Summer Music Festival",
-    description: "Amazing performances and crowd moments from the summer music festival featuring local and international artists.",
-    createdAt: "2025-06-15",
-    photos: [
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=300&h=200&fit=crop",
-      "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=300&h=200&fit=crop"
-    ]
-  }
-];
-
 const GalleryManagement: React.FC = () => {
-  const [collections, setCollections] = useState<PhotoCollection[]>(sampleCollections);
-  const [selectedCollection, setSelectedCollection] = useState<PhotoCollection | null>(null);
+  const { galleries, fetchGalleries, deleteGallery, isLoading, updateGallery } = useGalleryStore();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedGallery, setSelectedGallery] = useState<GalleryWithId | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Handle edit collection
-  const handleEditCollection = (collection: PhotoCollection) => {
-    setSelectedCollection(collection);
+  useEffect(() => {
+    const loadGalleries = async () => {
+      try {
+        await fetchGalleries();
+      } catch (error) {
+        console.error('Error loading galleries:', error);
+      }
+    };
+
+    loadGalleries();
+  }, [fetchGalleries]);
+
+  // Handle view gallery
+  const handleViewGallery = (gallery: GalleryWithId) => {
+    setSelectedGallery(gallery);
+    setShowViewModal(true);
+  };
+
+  // Handle edit gallery
+  const handleEditGallery = (gallery: GalleryWithId) => {
+    setSelectedGallery(gallery);
     setShowEditModal(true);
   };
 
-  // Handle delete collection
-  const handleDeleteCollection = (collectionId: number) => {
-    if (window.confirm('Are you sure you want to delete this photo collection? This action cannot be undone.')) {
-      setCollections(collections.filter(collection => collection.id !== collectionId));
+  // Handle delete gallery
+  const handleDeleteGallery = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this gallery? This action cannot be undone.')) {
+      try {
+        setIsDeleting(true);
+        await deleteGallery(id);
+        toast.success('Gallery deleted successfully');
+      } catch (error) {
+        console.error('Error deleting gallery:', error);
+        toast.error('Failed to delete gallery');
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
   // Handle save edit
-  const handleSaveEdit = (updatedCollection: PhotoCollection) => {
-    setCollections(collections.map(collection => 
-      collection.id === updatedCollection.id ? updatedCollection : collection
-    ));
-    setShowEditModal(false);
-    setSelectedCollection(null);
+  const handleSaveEdit = async (updatedGallery: GalleryWithId) => {
+    try {
+      setIsEditing(true);
+      await updateGallery(updatedGallery._id, {
+        title: updatedGallery.title,
+        description: updatedGallery.description,
+        images: updatedGallery.images
+      });
+      setShowEditModal(false);
+      setSelectedGallery(null);
+      toast.success('Gallery updated successfully');
+    } catch (error) {
+      console.error('Error updating gallery:', error);
+      toast.error('Failed to update gallery');
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   // Format date for display
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
   };
+
+  // Handle adding a new image
+  const handleAddImage = () => {
+    if (currentImageUrl.trim() && selectedGallery) {
+      const updatedGallery = {
+        ...selectedGallery,
+        images: [...selectedGallery.images, currentImageUrl.trim()]
+      };
+      setSelectedGallery(updatedGallery);
+      setCurrentImageUrl('');
+    }
+  };
+
+  // Handle removing an image
+  const handleRemoveImage = (index: number) => {
+    if (selectedGallery) {
+      const updatedGallery = {
+        ...selectedGallery,
+        images: selectedGallery.images.filter((_, i) => i !== index)
+      };
+      setSelectedGallery(updatedGallery);
+    }
+  };
+
+  if (isLoading && galleries.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin h-12 w-12 text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -83,48 +126,64 @@ const GalleryManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">Gallery Management</h1>
           <p className="text-gray-600 mt-1">Manage photo collections and albums</p>
         </div>
+        <Link
+          to="/admin/gallery/add"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+        >
+          <Plus size={18} />
+          Add New Gallery
+        </Link>
       </div>
 
       {/* Collections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {collections.map((collection) => (
-          <div key={collection.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        {galleries.map((gallery) => (
+          <div key={gallery._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
             {/* Photo Preview Grid */}
             <div className="h-48 bg-gray-200 overflow-hidden relative">
-              {collection.photos.length > 0 ? (
+              {gallery.images.length > 0 ? (
                 <div className="grid grid-cols-2 h-full gap-1">
                   {/* Main photo takes left half */}
                   <div className="relative">
                     <img
-                      src={collection.photos[0]}
-                      alt="Main preview"
+                      src={gallery.images[0]}
+                      alt={gallery.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                      }}
                     />
                   </div>
                   
                   {/* Right side shows up to 3 more photos in a grid */}
                   <div className="grid grid-rows-2 gap-1">
-                    {collection.photos.slice(1, 3).map((photo, index) => (
+                    {gallery.images.slice(1, 3).map((image, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={photo}
-                          alt={`Preview ${index + 2}`}
+                          src={image}
+                          alt={`${gallery.title} ${index + 2}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                          }}
                         />
                       </div>
                     ))}
                     
                     {/* Show count overlay if more than 4 photos */}
-                    {collection.photos.length > 4 && (
+                    {gallery.images.length > 4 && (
                       <div className="relative">
                         <img
-                          src={collection.photos[3]}
-                          alt="Preview 4"
+                          src={gallery.images[3]}
+                          alt={`${gallery.title} 4`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                          }}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
                           <span className="text-white font-bold text-lg">
-                            +{collection.photos.length - 4}
+                            +{gallery.images.length - 4}
                           </span>
                         </div>
                       </div>
@@ -132,49 +191,67 @@ const GalleryManagement: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Images size={48} className="text-gray-400" />
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <Images size={48} className="text-gray-300" />
                 </div>
               )}
               
               {/* Photo count badge */}
               <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
                 <Images size={14} />
-                {collection.photos.length}
+                {gallery.images.length}
               </div>
             </div>
 
             {/* Collection Content */}
             <div className="p-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                {collection.title}
+                {gallery.title}
               </h3>
               
               <div className="flex items-center text-gray-600 text-sm mb-3">
                 <Calendar size={16} className="mr-2" />
-                {formatDate(collection.createdAt)}
+                {formatDate(gallery.createdAt)}
               </div>
 
               <div className="flex items-start text-gray-600 text-sm mb-4">
                 <FileText size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-                <p className="line-clamp-3">{collection.description}</p>
+                <p className="line-clamp-3">{gallery.description}</p>
               </div>
 
-              {/* Action Buttons */}
+                {/* Action Buttons */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => handleEditCollection(collection)}
+                  onClick={() => handleViewGallery(gallery)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                >
+                  <Eye size={16} />
+                  View
+                </button>
+                <button
+                  onClick={() => handleEditGallery(gallery)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  disabled={isDeleting}
                 >
                   <Edit size={16} />
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDeleteCollection(collection.id)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  onClick={() => handleDeleteGallery(gallery._id)}
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                 >
-                  <Trash2 size={16} />
-                  Delete
+                  {isDeleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Delete
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -182,180 +259,222 @@ const GalleryManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Edit Modal */}
-      {showEditModal && selectedCollection && (
-        <EditCollectionModal
-          collection={selectedCollection}
-          onSave={handleSaveEdit}
-          onCancel={() => {
-            setShowEditModal(false);
-            setSelectedCollection(null);
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-// Edit Collection Modal Component
-interface EditCollectionModalProps {
-  collection: PhotoCollection;
-  onSave: (collection: PhotoCollection) => void;
-  onCancel: () => void;
-}
-
-const EditCollectionModal: React.FC<EditCollectionModalProps> = ({ collection, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<PhotoCollection>({ ...collection });
-  const [newPhotoUrl, setNewPhotoUrl] = useState('');
-
-  const handleSubmit = () => {
-    onSave(formData);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleAddPhoto = () => {
-    if (newPhotoUrl.trim()) {
-      setFormData({
-        ...formData,
-        photos: [...formData.photos, newPhotoUrl.trim()]
-      });
-      setNewPhotoUrl('');
-    }
-  };
-
-  const handleRemovePhoto = (index: number) => {
-    setFormData({
-      ...formData,
-      photos: formData.photos.filter((_, i) => i !== index)
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Edit Photo Collection</h2>
-            <button
-              onClick={onCancel}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
-              ×
-            </button>
+      {galleries.length === 0 && !isLoading && (
+        <div className="col-span-full text-center py-12">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Images size={32} className="text-gray-400" />
           </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">No galleries yet</h3>
+          <p className="text-gray-500 mb-4">Get started by creating a new gallery.</p>
+          <Link
+            to="/admin/gallery/add"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Plus size={16} className="mr-2" />
+            Create Gallery
+          </Link>
+        </div>
+      )}
 
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Collection Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Creation Date
-              </label>
-              <input
-                type="date"
-                name="createdAt"
-                value={formData.createdAt}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            {/* Photo Management */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Photos ({formData.photos.length})
-              </label>
-              
-              {/* Add new photo */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="url"
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder="Enter photo URL..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+      {/* View Modal */}
+      {showViewModal && selectedGallery && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">{selectedGallery.title}</h2>
                 <button
-                  type="button"
-                  onClick={handleAddPhoto}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  Add Photo
+                  <X size={24} />
                 </button>
               </div>
-
-              {/* Photos grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-60 overflow-y-auto">
-                {formData.photos.map((photo, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border"
-                    />
-                    <button
-                      onClick={() => handleRemovePhoto(index)}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+              
+              <div className="mb-6">
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {selectedGallery.images.slice(0, 4).map((image, index) => (
+                    <div key={index} className="relative aspect-square">
+                      <img
+                        src={image}
+                        alt={`${selectedGallery.title} ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                        }}
+                      />
+                      {index === 3 && selectedGallery.images.length > 4 && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                          <span className="text-white text-lg font-bold">
+                            +{selectedGallery.images.length - 4} more
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={onCancel}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
+              
+              <div className="mb-6">
+                <div className="flex items-center text-gray-700 mb-4">
+                  <Calendar size={20} className="mr-3 text-blue-600" />
+                  <div>
+                    <p className="font-medium">Created</p>
+                    <p>{formatDate(selectedGallery.createdAt)}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="font-medium text-gray-700 mb-2">Description</p>
+                  <p className="text-gray-600">
+                    {selectedGallery.description || 'No description provided.'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditGallery(selectedGallery);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Edit Gallery
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedGallery && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Gallery</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedGallery.title}
+                    onChange={(e) =>
+                      setSelectedGallery({
+                        ...selectedGallery,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={selectedGallery.description}
+                    onChange={(e) =>
+                      setSelectedGallery({
+                        ...selectedGallery,
+                        description: e.target.value,
+                      })
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Images ({selectedGallery.images.length})
+                  </label>
+                  
+                  <div className="flex gap-2 mb-4">
+                    <input
+                      type="url"
+                      value={currentImageUrl}
+                      onChange={(e) => setCurrentImageUrl(e.target.value)}
+                      placeholder="Enter image URL"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImage}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <Plus size={16} />
+                      Add Image
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {selectedGallery.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image}
+                          alt={`Gallery image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-md border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveEdit(selectedGallery)}
+                    disabled={isEditing}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isEditing ? (
+                      <>
+                        <Loader2 className="animate-spin h-4 w-4" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

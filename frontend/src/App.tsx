@@ -24,6 +24,7 @@ import AddEventPage from "./admin/components/AddEventPage"
 import AddGalleryPage from "./admin/components/AddGalleryPage"
 import AddInterviewPage from "./admin/components/AddInterviewPage"
 import AddNewsPage from "./admin/components/AddNewsPage"
+import EditGalleryPage from "./admin/pages/EditGalleryPage"
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -73,6 +74,7 @@ const App: React.FC = () => {
           <Route path="/admin/add-gallery" element={authUser?<AddGalleryPage />:<Navigate to="/admin/login" />}/>
           <Route path="/admin/add-interview" element={authUser?<AddInterviewPage />:<Navigate to="/admin/login" />}/>
           <Route path="/admin/add-news" element={authUser?<AddNewsPage />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin/gallery/edit/:id" element={authUser?<EditGalleryPage />:<Navigate to="/admin/login" />}/>
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
