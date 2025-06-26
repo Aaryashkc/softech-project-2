@@ -5,8 +5,8 @@ import { createInterview, deleteInterview, getAllInterviews, getInterviewById, u
 const router = express.Router();
 
 router.post('/', protectRoute, createInterview);
-router.get('/', protectRoute, getAllInterviews);
-router.get('/:id', protectRoute, getInterviewById);
+router.get('/', getAllInterviews);
+router.get('/:id', getInterviewById);
 router.put('/:id', protectRoute, updateInterview);
 router.delete('/:id', protectRoute, deleteInterview);
 

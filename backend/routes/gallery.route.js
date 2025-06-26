@@ -4,19 +4,15 @@ import { createGallery, deleteGallery, getAllGalleries, getGalleryById, updateGa
 
 const router = express.Router();
 
-// Create gallery (protected)
 router.post('/create', protectRoute, createGallery);
 
-// Get all galleries
 router.get('/all', getAllGalleries);
 
 // Get gallery by ID
 router.get('/:id', getGalleryById);
 
-// Update gallery (protected)
 router.put('/:id', protectRoute, updateGallery);
 
-// Delete gallery (protected)
 router.delete('/:id', protectRoute, deleteGallery);
 
 export default router;

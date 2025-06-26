@@ -5,9 +5,9 @@ import { createArticle, deleteArticle, getAllArticles, getArticleById, updateArt
 const router = express.Router();
 
 router.post('/', protectRoute, createArticle);
-router.get('/', protectRoute, getAllArticles);
-router.get('/:id', protectRoute, getArticleById);
-router.put('/:id', protectRoute, updateArticle);
-router.delete('/:id', protectRoute, deleteArticle);
+router.get('/', getAllArticles);
+router.get('/:id', getArticleById);
+router.put('/:id', updateArticle);
+router.delete('/:id', deleteArticle);
 
 export default router;
