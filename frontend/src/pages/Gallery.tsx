@@ -1,67 +1,45 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Calendar } from 'lucide-react';
-
-// TypeScript interfaces
-interface PhotoCollection {
-  id: number;
-  title: string;
-  description: string;
-  createdAt: string;
-  photos: string[];
-}
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, Loader2 } from 'lucide-react';
+import { useGalleryStore, type GalleryType } from '../stores/useGalleryStore';
 
 const Gallery: React.FC = () => {
   const [currentView, setCurrentView] = useState<'gallery' | 'collection'>('gallery');
-  const [selectedCollection, setSelectedCollection] = useState<PhotoCollection | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<GalleryType | null>(null);
+  
+  const { galleries, fetchGalleries, isLoading } = useGalleryStore();
 
-  // Demo data - one collection with 5 photos
-  const photoCollections: PhotoCollection[] = [
-    {
-      id: 1,
-      title: "Community Healthcare Forum - Kathmandu",
-      description: "Photos from the community healthcare forum held in Kathmandu, showcasing our commitment to public health and community engagement.",
-      createdAt: "2025-06-15T10:30:00Z",
-      photos: [
-        "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop"
-      ]
-    },
-    {
-      id: 2,
-      title: "Community Healthcare Forum - Kathmandu",
-      description: "Photos from the community healthcare forum held in Kathmandu, showcasing our commitment to public health and community engagement.",
-      createdAt: "2025-06-22T10:30:00Z",
-      photos: [
-        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop"
-      ]
+  // Fetch galleries on component mount
+  useEffect(() => {
+    fetchGalleries();
+  }, [fetchGalleries]);
+
+  const formatDate = (dateStr: string | undefined): string => {
+    if (!dateStr) return 'Date not specified';
+    
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date not specified';
     }
-  ];
-
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 day ago';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-    
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
   };
 
-  const openCollection = (collection: PhotoCollection): void => {
+  const openCollection = (collection: GalleryType): void => {
     setSelectedCollection(collection);
     setCurrentView('collection');
   };
@@ -89,43 +67,58 @@ const Gallery: React.FC = () => {
       {/* Photo Collections */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {photoCollections.map((collection) => (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+            </div>
+          ) : galleries.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleries.map((gallery) => (
               <div 
-                key={collection.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer"
-                onClick={() => openCollection(collection)}
+                key={gallery._id}
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
+                onClick={() => openCollection(gallery)}
               >
                 {/* Thumbnail */}
-                <div className="relative">
+                <div className="relative flex-1">
                   <img 
-                    src={collection.photos[0]} 
-                    alt={collection.title}
+                    src={gallery.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                    alt={gallery.title}
                     className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                    }}
                   />
                   <div className="absolute bottom-4 right-4">
                     <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
-                      {collection.photos.length} photos
+                      {gallery.images.length} {gallery.images.length === 1 ? 'photo' : 'photos'}
                     </span>
                   </div>
                 </div>
                 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {collection.title}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                    {gallery.title}
                   </h3>
-                  <h4 className="text-md text-gray-900 mb-2">
-                    {collection.description}
-                  </h4>
-                  <div className="flex items-center text-gray-500 text-sm">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {formatDate(collection.createdAt)}
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {gallery.description}
+                  </p>
+                  <div className="flex items-center text-gray-500 text-sm mt-auto">
+                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>{formatDate(gallery.createdAt)}</span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <h3 className="text-xl font-medium text-gray-700 mb-2">No Galleries Found</h3>
+              <p className="text-gray-500">Check back later for photo galleries.</p>
+            </div>
+          )}
         </div>
       </section>
     </div>
@@ -161,12 +154,16 @@ const Gallery: React.FC = () => {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedCollection.photos.map((photo, index) => (
+              {selectedCollection.images.map((image, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <img 
-                    src={photo} 
+                    src={image || 'https://via.placeholder.com/400x300?text=No+Image'} 
                     alt={`${selectedCollection.title} - Photo ${index + 1}`}
                     className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                    }}
                   />
                 </div>
               ))}

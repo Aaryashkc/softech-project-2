@@ -1,42 +1,18 @@
-import React, { useMemo } from 'react';
-import { Calendar, MapPin, Clock } from 'lucide-react';
+import React, { useMemo, useEffect } from 'react';
+import { Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
+import { useEventStore, type EventType } from '../stores/useEventStore';
 
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  description: string;
-  image: string;
-}
-
-interface EventWithStatus extends Event {
+interface EventWithStatus extends EventType {
   status: 'upcoming' | 'completed';
 }
 
 const EventsPage: React.FC = () => {
-  // Demo data - only one event
-  const events: Event[] = [
-    {
-      id: 1,
-      title: "Community Healthcare Forum",
-      date: "2025-06-15",
-      time: "10:00 AM",
-      location: "Kathmandu Community Center",
-      description: "Join us for an open discussion on improving healthcare access in rural communities across Nepal.",
-      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=250&fit=crop"
-    },
-    {
-      id: 1,
-      title: "Community Healthcare Forum",
-      date: "2025-07-15",
-      time: "10:00 AM",
-      location: "Kathmandu Community Center",
-      description: "Join us for an open discussion on improving healthcare access in rural communities across Nepal.",
-      image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop"
-    },
-  ];
+  const { events, fetchEvents, isLoading } = useEventStore();
+
+  // Fetch events on component mount
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   // Process events with status
   const { upcomingEvents, completedEvents } = useMemo(() => {
@@ -49,30 +25,50 @@ const EventsPage: React.FC = () => {
       return { ...event, status } as EventWithStatus;
     });
 
+    // Sort events by date (soonest first for upcoming, most recent first for completed)
+    const sortedUpcoming = eventsWithStatus
+      .filter(event => event.status === 'upcoming')
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+    const sortedCompleted = eventsWithStatus
+      .filter(event => event.status === 'completed')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     return {
-      upcomingEvents: eventsWithStatus.filter(event => event.status === 'upcoming'),
-      completedEvents: eventsWithStatus.filter(event => event.status === 'completed')
+      upcomingEvents: sortedUpcoming,
+      completedEvents: sortedCompleted
     };
-  }, []);
+  }, [events]);
 
   // Format date for display
   const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Date not specified';
+      
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const EventCard = ({ event }: { event: EventWithStatus }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden h-full flex flex-col">
       <div className="relative">
         <img 
-          src={event.image} 
+          src={event.image || 'https://via.placeholder.com/400x250?text=No+Image'} 
           alt={event.title}
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = 'https://via.placeholder.com/400x250?text=Image+Not+Available';
+          }}
         />
         <div className="absolute top-4 right-4">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -126,8 +122,15 @@ const EventsPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+        </div>
+      )}
+
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {!isLoading && upcomingEvents.length > 0 && (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -136,7 +139,7 @@ const EventsPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {upcomingEvents.map(event => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event._id} event={event} />
               ))}
             </div>
           </div>
@@ -144,7 +147,7 @@ const EventsPage: React.FC = () => {
       )}
 
       {/* Past Events */}
-      {completedEvents.length > 0 && (
+      {!isLoading && completedEvents.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -153,7 +156,7 @@ const EventsPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {completedEvents.map(event => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event._id} event={event} />
               ))}
             </div>
           </div>
@@ -161,7 +164,7 @@ const EventsPage: React.FC = () => {
       )}
 
       {/* Show message if no events */}
-      {upcomingEvents.length === 0 && completedEvents.length === 0 && (
+      {!isLoading && upcomingEvents.length === 0 && completedEvents.length === 0 && (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">No Events Available</h2>

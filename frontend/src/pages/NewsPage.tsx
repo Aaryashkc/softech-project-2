@@ -1,98 +1,56 @@
-import { Calendar, ArrowRight, Newspaper, Mic, Play, Share2 } from 'lucide-react';
-import { useState } from 'react';
-
-interface NewsArticle {
-  id: number;
-  title: string;
-  excerpt: string;
-  date: string;
-  category: string;
-  featured: boolean;
-  image: string;
-  source: string;
-  link: string;
-}
-
-interface Interview {
-  id: number;
-  title: string;
-  excerpt: string;
-  date: string;
-  category: string;
-  platform: string;
-  featured: boolean;
-  image: string;
-  link: string;
-}
+import { Calendar, ArrowRight, Newspaper, Mic, Play, Share2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNewsStore, type NewsArticle } from '../stores/useNewsStore';
+import { useInterviewStore, type Interview } from '../stores/useInterviewStore';
 
 const NewsPage = () => {
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'news' | 'interviews'>('all');
+  const { news, fetchNews, isLoading: newsLoading } = useNewsStore();
+  const { interviews, fetchInterviews, isLoading: interviewsLoading } = useInterviewStore();
 
-  // Demo data - this will be replaced with backend data later
-  const newsArticles: NewsArticle[] = [
-    {
-      id: 1,
-      title: "Ranjit Tamang Calls for Educational Reform in National Assembly",
-      excerpt: "In a passionate speech at the National Assembly, Ranjit Tamang outlined comprehensive plans for making quality education accessible to all Nepali citizens.",
-      date: "2025-06-18",
-      category: "news",
-      featured: true,
-      image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&h=400&fit=crop",
-      source: "The Kathmandu Post",
-      link: "https://kathmandupost.com/politics/2025/06/18/educational-reform-assembly"
-    }
-  ];
+  useEffect(() => {
+    fetchNews();
+    fetchInterviews();
+    // eslint-disable-next-line
+  }, []);
 
-  const interviews: Interview[] = [
-    {
-      id: 1,
-      title: "In Conversation: Ranjit Tamang on Nepal's Democratic Future",
-      excerpt: "An in-depth discussion about progressive politics, social justice, and the role of youth in Nepal's transformation.",
-      date: "2025-06-20",
-      category: "interview",
-      platform: "Nepal Television",
-      featured: false,
-      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop",
-      link: "https://youtube.com/watch?v=dQw4w9WgXcQ"
-    }
-  ];
+  // Merge and sort all content by date (desc)
+  const allContent = useMemo(() => {
+    const mappedNews = news.map((n) => ({ ...n, type: 'news' as const }));
+    const mappedInterviews = interviews.map((i) => ({ ...i, type: 'interview' as const }));
+    return [...mappedNews, ...mappedInterviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [news, interviews]);
 
-  const allContent = [...newsArticles, ...interviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  const getFilteredContent = (): (NewsArticle | Interview)[] => {
-    switch(activeTab) {
-      case 'news':
-        return newsArticles;
-      case 'interviews':
-        return interviews;
-      default:
-        return allContent;
-    }
+  const getFilteredContent = () => {
+    if (activeTab === 'news') return news.map((n) => ({ ...n, type: 'news' as const }));
+    if (activeTab === 'interviews') return interviews.map((i) => ({ ...i, type: 'interview' as const }));
+    return allContent;
   };
 
   const filteredContent = getFilteredContent();
-  const featuredContent = filteredContent.filter(item => item.featured);
-  const regularContent = filteredContent.filter(item => !item.featured);
+  const featuredContent = filteredContent.filter((item) => item.featured);
+  const regularContent = filteredContent.filter((item) => !item.featured);
+
+  const isLoading = newsLoading || interviewsLoading;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
   const handleNavigation = (link: string) => {
-    // Open external links in a new tab
     window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   const NewsCard = ({ article }: { article: NewsArticle }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative">
-        <img 
-          src={article.image} 
+        <img
+          src={article.image}
           alt={article.title}
           className="w-full h-48 object-cover"
         />
@@ -104,22 +62,18 @@ const NewsPage = () => {
           </div>
         )}
       </div>
-      
       <div className="p-6">
         <div className="mb-3">
           <span className="text-sm text-red-600 font-medium">{article.source}</span>
         </div>
-        
         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">{article.title}</h3>
         <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center text-gray-500 text-sm">
             <Calendar className="h-4 w-4 mr-1" />
             {formatDate(article.date)}
           </div>
-          
-          <button 
+          <button
             onClick={() => handleNavigation(article.link)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
           >
@@ -134,8 +88,8 @@ const NewsPage = () => {
   const InterviewCard = ({ interview }: { interview: Interview }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <div className="relative">
-        <img 
-          src={interview.image} 
+        <img
+          src={interview.image}
           alt={interview.title}
           className="w-full h-48 object-cover"
         />
@@ -152,22 +106,18 @@ const NewsPage = () => {
           </div>
         </div>
       </div>
-      
       <div className="p-6">
         <div className="mb-3">
           <span className="text-sm text-red-600 font-medium">{interview.platform}</span>
         </div>
-        
         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">{interview.title}</h3>
         <p className="text-gray-600 mb-4 line-clamp-3">{interview.excerpt}</p>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center text-gray-500 text-sm">
             <Calendar className="h-4 w-4 mr-1" />
             {formatDate(interview.date)}
           </div>
-          
-          <button 
+          <button
             onClick={() => handleNavigation(interview.link)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
           >
@@ -236,8 +186,15 @@ const NewsPage = () => {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+        </div>
+      )}
+
       {/* Featured Content */}
-      {featuredContent.length > 0 && (
+      {!isLoading && featuredContent.length > 0 && (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -248,50 +205,57 @@ const NewsPage = () => {
                 Highlighting our most important political discussions and policy announcements
               </p>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {featuredContent.map((item) => (
-                'source' in item ? 
-                  <NewsCard key={`news-${item.id}`} article={item} /> : 
-                  <InterviewCard key={`interview-${item.id}`} interview={item} />
-              ))}
+              {featuredContent.map((item) =>
+                item.type === 'news' ? (
+                  <NewsCard key={`news-${item._id}`} article={item} />
+                ) : (
+                  <InterviewCard key={`interview-${item._id}`} interview={item} />
+                )
+              )}
             </div>
           </div>
         </section>
       )}
 
       {/* All Content */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              {activeTab === 'news' ? 'Latest News' : activeTab === 'interviews' ? 'Recent Interviews' : 'Recent Updates'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {activeTab === 'news' 
-                ? 'Stay updated with our latest political activities and policy positions'
-                : activeTab === 'interviews'
-                ? 'In-depth conversations about Nepal\'s future and our political vision'
-                : 'Complete coverage of our political activities and media appearances'
-              }
-            </p>
+      {!isLoading && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                {activeTab === 'news'
+                  ? 'Latest News'
+                  : activeTab === 'interviews'
+                  ? 'Recent Interviews'
+                  : 'Recent Updates'}
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                {activeTab === 'news'
+                  ? 'Stay updated with our latest political activities and policy positions'
+                  : activeTab === 'interviews'
+                  ? "In-depth conversations about Nepal's future and our political vision"
+                  : 'Complete coverage of our political activities and media appearances'}
+              </p>
+            </div>
+            {regularContent.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {regularContent.map((item) =>
+                  item.type === 'news' ? (
+                    <NewsCard key={`news-${item._id}`} article={item} />
+                  ) : (
+                    <InterviewCard key={`interview-${item._id}`} interview={item} />
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">No content available in this category.</p>
+              </div>
+            )}
           </div>
-
-          {regularContent.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {regularContent.map((item) => (
-                'source' in item ? 
-                  <NewsCard key={`news-${item.id}`} article={item} /> : 
-                  <InterviewCard key={`interview-${item.id}`} interview={item} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No content available in this category.</p>
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Call to Action */}
       <section className="py-20 bg-red-700">
@@ -300,7 +264,7 @@ const NewsPage = () => {
             Stay Informed
           </h2>
           <p className="text-xl text-red-100 mb-8 leading-relaxed">
-            Subscribe to our newsletter for the latest updates on political activities, 
+            Subscribe to our newsletter for the latest updates on political activities,
             policy positions, and community engagement initiatives.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
