@@ -6,8 +6,6 @@ const Gallery: React.FC = () => {
   const [currentView, setCurrentView] = useState<'gallery' | 'collection'>('gallery');
   const [selectedCollection, setSelectedCollection] = useState<GalleryType | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(false);
   
   const { galleries, fetchGalleries, isLoading } = useGalleryStore();
 
@@ -35,8 +33,8 @@ const Gallery: React.FC = () => {
           break;
         case ' ':
           e.preventDefault();
-          if (isVideoFile(selectedCollection.images[fullscreenIndex])) {
-            toggleVideoPlayback();
+          if (isVideo(selectedCollection.images[fullscreenIndex])) {
+            // No custom play/pause logic here, rely on native controls
           }
           break;
       }
@@ -79,9 +77,9 @@ const Gallery: React.FC = () => {
     }
   };
 
-  const isVideoFile = (url: string): boolean => {
-    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
-    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  // Helper function to check if a URL is a video
+  const isVideo = (url: string) => {
+    return /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(url);
   };
 
   const openCollection = (collection: GalleryType): void => {
@@ -97,12 +95,10 @@ const Gallery: React.FC = () => {
 
   const openFullscreen = (index: number): void => {
     setFullscreenIndex(index);
-    setIsVideoPlaying(false);
   };
 
   const closeFullscreen = (): void => {
     setFullscreenIndex(null);
-    setIsVideoPlaying(false);
   };
 
   const navigateMedia = (direction: number): void => {
@@ -111,36 +107,17 @@ const Gallery: React.FC = () => {
     const newIndex = fullscreenIndex + direction;
     if (newIndex >= 0 && newIndex < selectedCollection.images.length) {
       setFullscreenIndex(newIndex);
-      setIsVideoPlaying(false);
     }
   };
 
-  const toggleVideoPlayback = useCallback(() => {
-    const video = document.querySelector('#fullscreen-video') as HTMLVideoElement;
-    if (video) {
-      if (isVideoPlaying) {
-        video.pause();
-      } else {
-        video.play();
-      }
-      setIsVideoPlaying(!isVideoPlaying);
-    }
-  }, [isVideoPlaying]);
-
-  const toggleVideoMute = useCallback(() => {
-    const video = document.querySelector('#fullscreen-video') as HTMLVideoElement;
-    if (video) {
-      video.muted = !isVideoMuted;
-      setIsVideoMuted(!isVideoMuted);
-    }
-  }, [isVideoMuted]);
+  // Remove isVideoPlaying, isVideoMuted, toggleVideoPlayback, toggleVideoMute, and related state/logic
 
   // Fullscreen Modal Component
   const FullscreenModal: React.FC = () => {
     if (fullscreenIndex === null || !selectedCollection) return null;
 
     const currentMedia = selectedCollection.images[fullscreenIndex];
-    const isVideo = isVideoFile(currentMedia);
+    const isMediaVideo = isVideo(currentMedia);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
@@ -173,40 +150,17 @@ const Gallery: React.FC = () => {
 
         {/* Media Content */}
         <div className="max-w-full max-h-full flex items-center justify-center relative">
-          {isVideo ? (
-            <div className="relative">
-              <video
-                id="fullscreen-video"
-                src={currentMedia}
-                className="max-w-full max-h-screen object-contain"
-                controls={false}
-                muted={isVideoMuted}
-                onPlay={() => setIsVideoPlaying(true)}
-                onPause={() => setIsVideoPlaying(false)}
-                onError={(e) => {
-                  const target = e.target as HTMLVideoElement;
-                  target.style.display = 'none';
-                }}
-              />
-              
-              {/* Video Controls */}
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={toggleVideoPlayback}
-                    className="text-white hover:text-gray-300 transition-colors"
-                  >
-                    {isVideoPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
-                  </button>
-                  <button
-                    onClick={toggleVideoMute}
-                    className="text-white hover:text-gray-300 transition-colors"
-                  >
-                    {isVideoMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-                  </button>
-                </div>
-              </div>
-            </div>
+          {isMediaVideo ? (
+            <video
+              src={currentMedia}
+              className="max-w-full max-h-screen object-contain"
+              controls
+              autoPlay
+              onError={(e) => {
+                const target = e.target as HTMLVideoElement;
+                target.style.display = 'none';
+              }}
+            />
           ) : (
             <img
               src={currentMedia}
@@ -226,7 +180,7 @@ const Gallery: React.FC = () => {
             {fullscreenIndex + 1} of {selectedCollection.images.length}
           </p>
           <p className="text-xs text-gray-300 mt-1">
-            {isVideo ? 'Video' : 'Image'} • Press ESC to close • Use arrow keys to navigate
+            {isMediaVideo ? 'Video' : 'Image'} 
           </p>
         </div>
       </div>
@@ -265,7 +219,7 @@ const Gallery: React.FC = () => {
               >
                 {/* Thumbnail */}
                 <div className="relative flex-1">
-                  {isVideoFile(gallery.images[0]) ? (
+                  {isVideo(gallery.images[0]) ? (
                     <div className="relative">
                       <video
                         src={gallery.images[0]}
@@ -361,7 +315,7 @@ const Gallery: React.FC = () => {
                   className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => openFullscreen(index)}
                 >
-                  {isVideoFile(media) ? (
+                  {isVideo(media) ? (
                     <div className="relative">
                       <video
                         src={media}

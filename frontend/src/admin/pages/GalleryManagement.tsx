@@ -8,6 +8,11 @@ interface GalleryWithId extends Omit<GalleryType, '_id'> {
   _id: string;
 }
 
+// Helper function to check if a URL is a video
+const isVideo = (url: string) => {
+  return /\.(mp4|webm|ogg)$/i.test(url);
+};
+
 const GalleryManagement: React.FC = () => {
   const { galleries, fetchGalleries, deleteGallery, isLoading, updateGallery } = useGalleryStore();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -136,42 +141,75 @@ const GalleryManagement: React.FC = () => {
             <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden relative">
               {gallery.images.length > 0 ? (
                 <div className="grid grid-cols-2 h-full gap-1">
-                  {/* Main photo takes left half */}
+                  {/* Main photo/video takes left half */}
                   <div className="relative">
-                    <img
-                      src={gallery.images[0]}
-                      alt={gallery.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                      }}
-                    />
+                    {isVideo(gallery.images[0]) ? (
+                      <video
+                        src={gallery.images[0]}
+                        controls
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={gallery.images[0]}
+                        alt={gallery.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                        }}
+                      />
+                    )}
                   </div>
-                  {/* Right side shows up to 3 more photos in a grid */}
+                  {/* Right side shows up to 3 more photos/videos in a grid */}
                   <div className="grid grid-rows-2 gap-1">
-                    {gallery.images.slice(1, 3).map((image, index) => (
+                    {gallery.images.slice(1, 3).map((media, index) => (
                       <div key={index} className="relative">
-                        <img
-                          src={image}
-                          alt={`${gallery.title} ${index + 2}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                          }}
-                        />
+                        {isVideo(media) ? (
+                          <video
+                            src={media}
+                            controls
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={media}
+                            alt={`${gallery.title} ${index + 2}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                            }}
+                          />
+                        )}
                       </div>
                     ))}
-                    {/* Show count overlay if more than 4 photos */}
+                    {/* Show count overlay if more than 4 photos/videos */}
                     {gallery.images.length > 4 && (
                       <div className="relative">
-                        <img
-                          src={gallery.images[3]}
-                          alt={`${gallery.title} 4`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                          }}
-                        />
+                        {isVideo(gallery.images[3]) ? (
+                          <video
+                            src={gallery.images[3]}
+                            controls
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={gallery.images[3]}
+                            alt={`${gallery.title} 4`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                            }}
+                          />
+                        )}
                         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
                           <span className="text-white font-bold text-lg">
                             +{gallery.images.length - 4}
@@ -278,16 +316,27 @@ const GalleryManagement: React.FC = () => {
               </div>
               <div className="mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                  {selectedGallery.images.slice(0, 4).map((image, index) => (
+                  {selectedGallery.images.slice(0, 4).map((media, index) => (
                     <div key={index} className="relative aspect-square">
-                      <img
-                        src={image}
-                        alt={`${selectedGallery.title} ${index + 1}`}
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                        }}
-                      />
+                      {isVideo(media) ? (
+                        <video
+                          src={media}
+                          controls
+                          className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={media}
+                          alt={`${selectedGallery.title} ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                          }}
+                        />
+                      )}
                       {index === 3 && selectedGallery.images.length > 4 && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
                           <span className="text-white text-lg font-bold">
@@ -400,16 +449,27 @@ const GalleryManagement: React.FC = () => {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {selectedGallery.images.map((image, index) => (
+                    {selectedGallery.images.map((media, index) => (
                       <div key={index} className="relative group">
-                        <img
-                          src={image}
-                          alt={`Gallery image ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-md border"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-                          }}
-                        />
+                        {isVideo(media) ? (
+                          <video
+                            src={media}
+                            controls
+                            className="w-full h-24 object-cover rounded-md border"
+                            onError={(e) => {
+                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/150?text=Video+Not+Found';
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={media}
+                            alt={`Gallery image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md border"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                            }}
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(index)}
