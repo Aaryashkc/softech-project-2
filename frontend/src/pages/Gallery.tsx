@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Calendar, Loader2, X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, Loader2, X, ChevronLeft, ChevronRight, Play} from 'lucide-react';
 import { useGalleryStore, type GalleryType } from '../stores/useGalleryStore';
 
 const Gallery: React.FC = () => {
