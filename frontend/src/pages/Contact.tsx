@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, MapPin, Clock, Send, Users, MessageSquare, Calendar } from 'lucide-react';
+import { useContactStore } from '../stores/useContactStore';
 
 interface ContactFormData {
   name: string;
@@ -16,6 +17,8 @@ const Contact: React.FC = () => {
     message: ''
   });
 
+  const { loading, error, success, sendContact, reset } = useContactStore();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -25,13 +28,12 @@ const Contact: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
-    // Reset form
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    alert('Thank you for your message. We will get back to you soon!');
+    await sendContact(formData);
+    if (!error) {
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    }
   };
 
   return (
@@ -133,22 +135,16 @@ const Contact: React.FC = () => {
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                     Subject
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="subject"
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="meeting">Request a Meeting</option>
-                    <option value="support">Political Support</option>
-                    <option value="volunteer">Volunteer Opportunities</option>
-                    <option value="media">Media & Press</option>
-                    <option value="other">Other</option>
-                  </select>
+                    placeholder="Subject of your message"
+                  />
                 </div>
 
                 <div>
@@ -167,12 +163,31 @@ const Contact: React.FC = () => {
                   ></textarea>
                 </div>
 
+                {error && (
+                  <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-2 text-center">{error}</div>
+                )}
+                {success && (
+                  <div className="bg-green-100 text-green-700 px-4 py-2 rounded mb-2 text-center">{success}</div>
+                )}
                 <button
                   type="submit"
                   className="w-full bg-red-700 text-white py-3 px-6 rounded-lg hover:bg-red-800 transition-colors duration-200 flex items-center justify-center"
+                  disabled={loading}
                 >
-                  <Send className="h-5 w-5 mr-2" />
-                  Send Message
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-5 w-5 mr-2" />
+                      Send Message
+                    </>
+                  )}
                 </button>
               </form>
             </div>

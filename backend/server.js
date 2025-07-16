@@ -11,6 +11,7 @@ import eventRoutes from './routes/event.route.js';
 import galleryRoutes from './routes/gallery.route.js';
 import newsRoutes from './routes/news.route.js';
 import interviewRoutes from './routes/interview.route.js';
+import contactRoutes from './routes/contact.route.js';
 
 const port= process.env.PORT;
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/events', eventRoutes)
 app.use('/api/gallery', galleryRoutes)
 app.use('/api/news', newsRoutes)
 app.use('/api/interviews', interviewRoutes)
+app.use('/api/contact', contactRoutes)
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

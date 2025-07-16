@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Calendar, Loader2, X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { useGalleryStore, type GalleryType } from '../stores/useGalleryStore';
 
 const Gallery: React.FC = () => {
   const [currentView, setCurrentView] = useState<'gallery' | 'collection'>('gallery');
   const [selectedCollection, setSelectedCollection] = useState<GalleryType | null>(null);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoMuted, setIsVideoMuted] = useState(false);
   
   const { galleries, fetchGalleries, isLoading } = useGalleryStore();
 
@@ -12,6 +15,43 @@ const Gallery: React.FC = () => {
   useEffect(() => {
     fetchGalleries();
   }, [fetchGalleries]);
+
+  // Keyboard navigation for fullscreen mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (fullscreenIndex === null || !selectedCollection) return;
+      
+      switch (e.key) {
+        case 'Escape':
+          setFullscreenIndex(null);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          navigateMedia(-1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          navigateMedia(1);
+          break;
+        case ' ':
+          e.preventDefault();
+          if (isVideoFile(selectedCollection.images[fullscreenIndex])) {
+            toggleVideoPlayback();
+          }
+          break;
+      }
+    };
+
+    if (fullscreenIndex !== null) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'auto';
+    };
+  }, [fullscreenIndex, selectedCollection]);
 
   const formatDate = (dateStr: string | undefined): string => {
     if (!dateStr) return 'Date not specified';
@@ -39,6 +79,11 @@ const Gallery: React.FC = () => {
     }
   };
 
+  const isVideoFile = (url: string): boolean => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
   const openCollection = (collection: GalleryType): void => {
     setSelectedCollection(collection);
     setCurrentView('collection');
@@ -47,6 +92,145 @@ const Gallery: React.FC = () => {
   const backToGallery = (): void => {
     setCurrentView('gallery');
     setSelectedCollection(null);
+    setFullscreenIndex(null);
+  };
+
+  const openFullscreen = (index: number): void => {
+    setFullscreenIndex(index);
+    setIsVideoPlaying(false);
+  };
+
+  const closeFullscreen = (): void => {
+    setFullscreenIndex(null);
+    setIsVideoPlaying(false);
+  };
+
+  const navigateMedia = (direction: number): void => {
+    if (!selectedCollection || fullscreenIndex === null) return;
+    
+    const newIndex = fullscreenIndex + direction;
+    if (newIndex >= 0 && newIndex < selectedCollection.images.length) {
+      setFullscreenIndex(newIndex);
+      setIsVideoPlaying(false);
+    }
+  };
+
+  const toggleVideoPlayback = useCallback(() => {
+    const video = document.querySelector('#fullscreen-video') as HTMLVideoElement;
+    if (video) {
+      if (isVideoPlaying) {
+        video.pause();
+      } else {
+        video.play();
+      }
+      setIsVideoPlaying(!isVideoPlaying);
+    }
+  }, [isVideoPlaying]);
+
+  const toggleVideoMute = useCallback(() => {
+    const video = document.querySelector('#fullscreen-video') as HTMLVideoElement;
+    if (video) {
+      video.muted = !isVideoMuted;
+      setIsVideoMuted(!isVideoMuted);
+    }
+  }, [isVideoMuted]);
+
+  // Fullscreen Modal Component
+  const FullscreenModal: React.FC = () => {
+    if (fullscreenIndex === null || !selectedCollection) return null;
+
+    const currentMedia = selectedCollection.images[fullscreenIndex];
+    const isVideo = isVideoFile(currentMedia);
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
+        {/* Close Button */}
+        <button
+          onClick={closeFullscreen}
+          className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
+        >
+          <X className="h-8 w-8" />
+        </button>
+
+        {/* Navigation Buttons */}
+        {fullscreenIndex > 0 && (
+          <button
+            onClick={() => navigateMedia(-1)}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
+          >
+            <ChevronLeft className="h-12 w-12" />
+          </button>
+        )}
+
+        {fullscreenIndex < selectedCollection.images.length - 1 && (
+          <button
+            onClick={() => navigateMedia(1)}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
+          >
+            <ChevronRight className="h-12 w-12" />
+          </button>
+        )}
+
+        {/* Media Content */}
+        <div className="max-w-full max-h-full flex items-center justify-center relative">
+          {isVideo ? (
+            <div className="relative">
+              <video
+                id="fullscreen-video"
+                src={currentMedia}
+                className="max-w-full max-h-screen object-contain"
+                controls={false}
+                muted={isVideoMuted}
+                onPlay={() => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+                onError={(e) => {
+                  const target = e.target as HTMLVideoElement;
+                  target.style.display = 'none';
+                }}
+              />
+              
+              {/* Video Controls */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={toggleVideoPlayback}
+                    className="text-white hover:text-gray-300 transition-colors"
+                  >
+                    {isVideoPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
+                  </button>
+                  <button
+                    onClick={toggleVideoMute}
+                    className="text-white hover:text-gray-300 transition-colors"
+                  >
+                    {isVideoMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={currentMedia}
+              alt={`${selectedCollection.title} - Photo ${fullscreenIndex + 1}`}
+              className="max-w-full max-h-screen object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Available';
+              }}
+            />
+          )}
+        </div>
+
+        {/* Media Info */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center">
+          <p className="text-sm">
+            {fullscreenIndex + 1} of {selectedCollection.images.length}
+          </p>
+          <p className="text-xs text-gray-300 mt-1">
+            {isVideo ? 'Video' : 'Image'} • Press ESC to close • Use arrow keys to navigate
+          </p>
+        </div>
+      </div>
+    );
   };
 
   // Gallery View Component
@@ -81,18 +265,35 @@ const Gallery: React.FC = () => {
               >
                 {/* Thumbnail */}
                 <div className="relative flex-1">
-                  <img 
-                    src={gallery.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                    alt={gallery.title}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                    }}
-                  />
+                  {isVideoFile(gallery.images[0]) ? (
+                    <div className="relative">
+                      <video
+                        src={gallery.images[0]}
+                        className="w-full h-64 object-cover"
+                        muted
+                        onError={(e) => {
+                          const target = e.target as HTMLVideoElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Play className="h-12 w-12 text-white opacity-80" />
+                      </div>
+                    </div>
+                  ) : (
+                    <img 
+                      src={gallery.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                      alt={gallery.title}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                      }}
+                    />
+                  )}
                   <div className="absolute bottom-4 right-4">
                     <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
-                      {gallery.images.length} {gallery.images.length === 1 ? 'photo' : 'photos'}
+                      {gallery.images.length} {gallery.images.length === 1 ? 'item' : 'items'}
                     </span>
                   </div>
                 </div>
@@ -150,21 +351,47 @@ const Gallery: React.FC = () => {
           </div>
         </section>
 
-        {/* All Photos */}
+        {/* All Media */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedCollection.images.map((image, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <img 
-                    src={image || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                    alt={`${selectedCollection.title} - Photo ${index + 1}`}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                    }}
-                  />
+              {selectedCollection.images.map((media, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => openFullscreen(index)}
+                >
+                  {isVideoFile(media) ? (
+                    <div className="relative">
+                      <video
+                        src={media}
+                        className="w-full h-64 object-cover"
+                        muted
+                        onError={(e) => {
+                          const target = e.target as HTMLVideoElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+                        <Play className="h-12 w-12 text-white opacity-80" />
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
+                          VIDEO
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <img 
+                      src={media || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                      alt={`${selectedCollection.title} - Photo ${index + 1}`}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                      }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -178,6 +405,7 @@ const Gallery: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {currentView === 'gallery' ? <GalleryView /> : <CollectionView />}
+      <FullscreenModal />
     </div>
   );
 };
