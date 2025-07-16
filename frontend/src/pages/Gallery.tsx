@@ -326,7 +326,7 @@ const Gallery: React.FC = () => {
                           target.style.display = 'none';
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+                      <div className="absolute inset-0 flex items-center justify-center">
                         <Play className="h-12 w-12 text-white opacity-80" />
                       </div>
                       <div className="absolute top-2 right-2">
