@@ -21,28 +21,32 @@ const AboutPage = () => {
       {/* Biography */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
                 Background & Early Life
               </h2>
               <div className="space-y-4 text-gray-600 text-lg">
                 <p>
-                  Ranjit Tamang emerged as a prominent figure in Nepal's political landscape 
-                  through his dedication to student activism and progressive politics. His 
-                  journey began within the ranks of the CPN (Maoist Centre), where he 
-                  demonstrated exceptional leadership qualities from an early age.
+                रन्जित तामाङको जन्म पूर्वी नेपालको झापा जिल्लाको साविक तोपगाछी–२ वासबारी (हालको कमल गाउँपालिका–१) मा २०३९ माघ १९ गते (February 2, 1983) मा भएको हो। उनका बुबा लोकबहादुर तामाङ र आमा लाखमाया तामाङ हुन्। सात सन्तानमध्ये रन्जित जेठो छोरा हुन्। उनका अभिभावक सामान्य कृषक हुन् र कृषि पेसाबाटै परिवारको जीवन निर्वाह गर्दै आएका छन्।
                 </p>
                 <p>
-                  As a student leader, he understood the critical role of youth in shaping 
-                  Nepal's democratic future. His commitment to social justice, educational 
-                  reform, and healthcare accessibility has been the driving force behind 
-                  his political career.
+                रन्जित तामाङले आफ्नो प्रारम्भिक शिक्षा नजिकैको श्री बाँसबारी निम्न माध्यमिक विद्यालयबाट सुरु गरेका थिए। उनले एसएलसी भने तत्कालीन तोपगाछी–२ स्थित श्री महेन्द्र रत्व माध्यमिक विद्यालयबाट उत्तीर्ण गरेका हुन्। त्यसपछि उनले महेन्द्र मोरङ कलेज, विराटनगरबाट आईए (Intermediate of Arts) अध्ययन गरे। पछि काठमाडौँको प्रदर्शनी मार्गस्थित रत्नराज्य लक्ष्मी क्याम्पसबाट स्नातक (BA) र त्रिभुवन विश्वविद्यालयबाट राजनीति शास्त्रमा स्नातकोत्तर (MA) सम्मको अध्ययन पूरा गरेका छन्।
                 </p>
                 <p>
-                  Today, as a Central Committee member of the CPN (Maoist Centre), he continues 
-                  to advocate for the marginalized and work towards building a more equitable 
-                  society in Nepal.
+                विद्यालय जीवनदेखि नै राजनीतिमा सक्रिय रन्जित नेकपा (माओवादी केन्द्र) को विद्यार्थी संगठन अनेरास्ववियु (क्रान्तिकारी) मा आवद्ध भए। उनी क्रमशः क्षेत्रीय सदस्य, जिल्ला सदस्य, झापा जिल्ला अध्यक्ष, केन्द्रीय सदस्य हुँदै २०७४ सालमा अनेरास्ववियुको पहिलो निर्वाचित केन्द्रीय समिति अध्यक्ष बन्न सफल भए।
+                </p>
+                <p>
+                उनी आफ्नो कार्यकालमा विद्यार्थी आन्दोलनलाई नयाँ दिशा दिन सफल भए र सडक संघर्षमा अग्रणी नेतृत्व गरेका थिए। नेकपा (माओवादी केन्द्र) र नेकपा (एमाले) बीच एकता भएपछि उनी अनेरास्ववियुका सह–संयोजकको भूमिका निर्वाह गरेका थिए। हाल उनी नेकपा (माओवादी केन्द्र)का केन्द्रीय सदस्य तथा झापा जिल्ला इञ्चार्जका रूपमा क्रियाशील छन्।
+                </p>
+                <p>
+                राजनीति मात्र होइन, उनी लेखनमा पनि सक्रिय छन्। विभिन्न खोजमूलक लेख, कविता, र गीतसमेत लेखेका छन्। उनले दुर्गा भट्टराईसँग विवाह गरेका छन् र एक छोरी आकृति तामाङ छन्।
+                </p>
+                <p>
+                २०५८ सालको संकटकालीन समयमा उनी पक्राउ परी करिब दुई वर्षसम्म जेल जीवन बिताएका थिए। वर्तमानमा उनी नेपाली राजनीतिक वृत्तमा युवाहरूले मन पराउने उदीयमान नेता मध्येका एक मानिन्छन्।
+                </p>
+                <p>
+                राजनीतिक, आर्थिक, सामाजिक र सांस्कृतिक रूपान्तरणको वकालत गर्दै आएका उनी उत्पीडित समुदायको हक अधिकार र सामाजिक न्यायका लागि अडिग छन्। आत्मनिर्भर अर्थतन्त्रका लागि मौलिक उत्पादन प्रणालीको आधुनिकीकरण गरी शिक्षा, स्वास्थ्य, रोजगारी र समृद्धिको लक्ष्यमा युवा पुस्ताले हातेमालो गर्नुपर्ने उनको परिवर्तनकारी सोच रहेको छ।
                 </p>
               </div>
             </div>
@@ -50,7 +54,7 @@ const AboutPage = () => {
               <img 
                 src={ABOUT}
                 alt="Ranjit Tamang"
-                className="rounded-lg shadow-lg w-full max-w-md"
+                className="rounded-lg mt-5 shadow-lg w-full lg:h-150 object-cover sm:h-96"
                 loading="lazy"
               />
             </div>
