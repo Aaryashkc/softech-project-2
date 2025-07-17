@@ -34,14 +34,35 @@ const App: React.FC = () => {
     checkAuth,
     isCheckingAuth
   } = useAuthStore();
+  
+  const protectedRoutes = [
+    "/admin",
+    "/admin/login",
+    "/eventmanagement",
+    "/gallerymanagement",
+    "/interviewmanagement",
+    "/newsmanagement",
+    "/admin/add-event",
+    "/admin/add-gallery",
+    "/admin/add-interview",
+    "/admin/add-news",
+    "/admin/gallery/edit"
+  ];
+
+  // Helper to check if current path is protected
+  const isProtectedRoute = protectedRoutes.some(route =>
+    location.pathname.startsWith(route)
+  );
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    if (isProtectedRoute) {
+      checkAuth();
+    }
+  }, [checkAuth, isProtectedRoute]);
 
   console.log(authUser);
 
-  if (isCheckingAuth && !authUser) {
+  if (isProtectedRoute && isCheckingAuth && !authUser) {
     return (
       <div className='flex justify-center items-center h-screen'>
         <LoaderCircle className='size-20 animate-spin text-red-700' />
@@ -53,6 +74,7 @@ const App: React.FC = () => {
       {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
         <Routes>
+          {/* public routes */}
           <Route path="/" element={<HomePage/>} />
           <Route path="/about" element={<AboutPage/>} />
           <Route path="/events" element={<EventsPage/>} />
