@@ -60,8 +60,6 @@ const App: React.FC = () => {
     }
   }, [checkAuth, isProtectedRoute]);
 
-  console.log(authUser);
-
   if (isProtectedRoute && isCheckingAuth && !authUser) {
     return (
       <div className='flex justify-center items-center h-screen'>
