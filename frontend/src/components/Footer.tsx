@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Mail, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -40,11 +40,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-red-600" />
-                <span className="text-sm">contact@ranjittamang.np</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-red-600" />
-                <span className="text-sm">+977-XX-XXXXXXX</span>
+                <span className="text-sm">ranjitlama2039@gmail.com</span>
               </div>
 
               {/* Social Media Links */}

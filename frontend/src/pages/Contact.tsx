@@ -74,9 +74,7 @@ const Contact: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Phone & Email</h3>
               <p className="text-gray-600">
-                Phone: +977-XX-XXXXXXX<br />
-                Email: contact@ranjittamang.np<br />
-                Official: office@ranjittamang.np
+                Email: ranjitlama2039@gmail.com<br />
               </p>
             </div>
 
@@ -261,7 +259,7 @@ const Contact: React.FC = () => {
       </section>
 
       {/* Map Section */}
-      <section className="py-20 bg-gray-100">
+      {/* <section className="py-20 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Us</h2>
@@ -280,7 +278,7 @@ const Contact: React.FC = () => {
               ></iframe>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };
