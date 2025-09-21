@@ -49,6 +49,14 @@ const InputField = ({
   </div>
 );
 
+interface ImageFile {
+  file: File;
+  preview: string;
+  name: string;
+  size: string;
+  base64?: string;
+}
+
 const AddGalleryPage: React.FC = () => {
   const { createGallery, isLoading } = useGalleryStore();
   
@@ -61,12 +69,12 @@ const AddGalleryPage: React.FC = () => {
   interface FormErrors {
     title?: string;
     description?: string;
-    imageUrl?: string;
     images?: string;
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [currentImageUrl, setCurrentImageUrl] = useState('');
+  const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -84,44 +92,137 @@ const AddGalleryPage: React.FC = () => {
     }
   };
 
-  const isValidUrl = (string: string): boolean => {
+  const validateFiles = (files: FileList): File[] => {
+    const validFiles: File[] = [];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxSize = 50 * 1024 * 1024; //
+
+    Array.from(files).forEach(file => {
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name}: Only JPEG, PNG, and WebP images are allowed`);
+        return;
+      }
+
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: File size must be less than 50MB`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    return validFiles;
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const processFiles = async (files: File[]): Promise<ImageFile[]> => {
+    const processedFiles: ImageFile[] = [];
+
+    for (const file of files) {
+      try {
+        const preview = URL.createObjectURL(file);
+        const base64 = await convertToBase64(file);
+        
+        processedFiles.push({
+          file,
+          preview,
+          name: file.name,
+          size: formatFileSize(file.size),
+          base64
+        });
+      } catch (error) {
+        console.error(`Error processing ${file.name}:`, error);
+        toast.error(`Failed to process ${file.name}`);
+      }
+    }
+
+    return processedFiles;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles = validateFiles(files);
+    if (validFiles.length === 0) return;
+
+    setIsProcessing(true);
+    
     try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
+      const processedFiles = await processFiles(validFiles);
+      
+      setImageFiles(prev => [...prev, ...processedFiles]);
+      
+      // Clear error if images were added
+      if (errors.images && processedFiles.length > 0) {
+        setErrors(prev => ({ ...prev, images: '' }));
+      }
+
+      toast.success(`${processedFiles.length} image(s) added successfully`);
+    } catch (error) {
+      toast.error('Failed to process images');
+    } finally {
+      setIsProcessing(false);
+      // Reset file input
+      e.target.value = '';
     }
   };
 
-  const addImageUrl = () => {
-    if (!currentImageUrl.trim()) {
-      setErrors(prev => ({ ...prev, imageUrl: 'Please enter an image URL' }));
-      return;
-    }
-
-    if (!isValidUrl(currentImageUrl)) {
-      setErrors(prev => ({ ...prev, imageUrl: 'Please enter a valid image URL' }));
-      return;
-    }
-
-    if (formData.images.includes(currentImageUrl)) {
-      setErrors(prev => ({ ...prev, imageUrl: 'This image URL is already added' }));
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, currentImageUrl]
-    }));
-    setCurrentImageUrl('');
-    setErrors(prev => ({ ...prev, imageUrl: '' }));
+  const removeImage = (indexToRemove: number) => {
+    setImageFiles(prev => {
+      const newFiles = prev.filter((_, index) => index !== indexToRemove);
+      // Revoke object URL to prevent memory leaks
+      URL.revokeObjectURL(prev[indexToRemove].preview);
+      return newFiles;
+    });
   };
 
-  const removeImageUrl = (indexToRemove: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
-    }));
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = validateFiles(e.dataTransfer.files);
+    
+    if (validFiles.length === 0) return;
+
+    setIsProcessing(true);
+    
+    try {
+      const processedFiles = await processFiles(validFiles);
+      setImageFiles(prev => [...prev, ...processedFiles]);
+      
+      if (errors.images && processedFiles.length > 0) {
+        setErrors(prev => ({ ...prev, images: '' }));
+      }
+
+      toast.success(`${processedFiles.length} image(s) added successfully`);
+    } catch (error) {
+      toast.error('Failed to process images');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const validateForm = (): boolean => {
@@ -129,7 +230,7 @@ const AddGalleryPage: React.FC = () => {
 
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (formData.images.length === 0) newErrors.images = 'At least one image is required';
+    if (imageFiles.length === 0) newErrors.images = 'At least one image is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -140,29 +241,53 @@ const AddGalleryPage: React.FC = () => {
     
     if (!validateForm()) {
       toast.error('Please fill in all required fields correctly');
-      return
+      return;
     }
 
     try {
-      console.log('Submitting gallery data:', formData);
-      await createGallery(formData);
+      // Prepare images array with base64 data
+      const imagesData = imageFiles.map(imageFile => imageFile.base64!);
+      
+      const submitData = {
+        ...formData,
+        images: imagesData
+      };
+
+      console.log('Submitting gallery data:', submitData);
+      await createGallery(submitData);
+      
+      // Clean up object URLs
+      imageFiles.forEach(imageFile => {
+        URL.revokeObjectURL(imageFile.preview);
+      });
+      
       // Reset form on success
       setFormData({
         title: '',
         description: '',
         images: []
       });
-      setCurrentImageUrl('');
+      setImageFiles([]);
       setErrors({});
     } catch (error) {
+      console.error('Error creating gallery:', error);
+      toast.error('Failed to create gallery');
     }
   };
 
-  const handleImageUrlKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addImageUrl();
-    }
+  const clearForm = () => {
+    // Clean up object URLs
+    imageFiles.forEach(imageFile => {
+      URL.revokeObjectURL(imageFile.preview);
+    });
+    
+    setFormData({
+      title: '',
+      description: '',
+      images: []
+    });
+    setImageFiles([]);
+    setErrors({});
   };
 
   return (
@@ -217,44 +342,46 @@ const AddGalleryPage: React.FC = () => {
               )}
             </div>
 
-            {/* Image URL Input */}
-            <div className="space-y-2">
+            {/* Image Upload Section */}
+            <div className="space-y-4">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Upload className="w-4 h-4" />
-                Add Images
+                Upload Images
                 <span className="text-red-500">*</span>
               </label>
-              <div className="flex flex-col sm:flex-row gap-2">
+
+              {/* File Upload Area */}
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
                 <input
-                  type="url"
-                  value={currentImageUrl}
-                  onChange={(e) => {
-                    setCurrentImageUrl(e.target.value);
-                    if (errors.imageUrl) {
-                      setErrors(prev => ({ ...prev, imageUrl: '' }));
-                    }
-                  }}
-                  onKeyPress={handleImageUrlKeyPress}
-                  placeholder="https://example.com/image.jpg"
-                  className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.imageUrl ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  type="file"
+                  id="images-upload"
+                  multiple
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  disabled={isProcessing}
                 />
-                <button
-                  type="button"
-                  onClick={addImageUrl}
-                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center gap-2 justify-center"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add
-                </button>
+                <label htmlFor="images-upload" className="cursor-pointer">
+                  {isProcessing ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                      <p className="text-gray-600 mb-2">Processing images...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, WebP up to 50MB each</p>
+                      <p className="text-sm text-gray-500">You can select multiple images at once</p>
+                    </>
+                  )}
+                </label>
               </div>
-              {errors.imageUrl && (
-                <p className="text-sm text-red-600 flex items-center gap-1">
-                  <span className="w-4 h-4">⚠️</span>
-                  {errors.imageUrl}
-                </p>
-              )}
+
               {errors.images && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
                   <span className="w-4 h-4">⚠️</span>
@@ -264,35 +391,63 @@ const AddGalleryPage: React.FC = () => {
             </div>
 
             {/* Image Preview Grid */}
-            {formData.images.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Gallery Preview ({formData.images.length} image{formData.images.length !== 1 ? 's' : ''})
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 p-2 sm:p-4 bg-gray-50 rounded-lg">
-                  {formData.images.map((imageUrl, index) => (
+            {imageFiles.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">
+                    Gallery Preview ({imageFiles.length} image{imageFiles.length !== 1 ? 's' : ''})
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      imageFiles.forEach(imageFile => {
+                        URL.revokeObjectURL(imageFile.preview);
+                      });
+                      setImageFiles([]);
+                    }}
+                    className="text-sm text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    Remove All
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                  {imageFiles.map((imageFile, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={imageUrl}
+                        src={imageFile.preview}
                         alt={`Gallery image ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-lg shadow-sm"
-                        onError={(e) => {
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
-                        }}
                       />
                       <button
                         type="button"
-                        onClick={() => removeImageUrl(index)}
+                        onClick={() => removeImage(index)}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                         title="Remove image"
                       >
                         <X className="w-3 h-3" />
                       </button>
-                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
                         {index + 1}
+                      </div>
+                      <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 py-1 rounded">
+                        {imageFile.size}
                       </div>
                     </div>
                   ))}
+                </div>
+                
+                {/* File Details */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Selected Files:</p>
+                  <div className="space-y-1">
+                    {imageFiles.map((imageFile, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded">
+                        <span className="truncate flex-1">{imageFile.name}</span>
+                        <span className="ml-2 text-gray-400">{imageFile.size}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -301,23 +456,15 @@ const AddGalleryPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-4 sm:pt-6">
               <button
                 type="button"
-                onClick={() => {
-                  setFormData({
-                    title: '',
-                    description: '',
-                    images: []
-                  });
-                  setCurrentImageUrl('');
-                  setErrors({});
-                }}
+                onClick={clearForm}
                 className="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
+                disabled={isLoading || isProcessing}
               >
                 Clear Form
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isProcessing || imageFiles.length === 0}
                 className="w-full sm:flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
@@ -335,18 +482,6 @@ const AddGalleryPage: React.FC = () => {
             </div>
           </div>
         </form>
-
-        {/* Tips */}
-        <div className="mt-6 sm:mt-8 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-          <h3 className="font-medium text-blue-900 mb-2">🎨 Gallery Tips:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Use high-quality image URLs for the best gallery experience</li>
-            <li>• Make sure all image URLs are publicly accessible</li>
-            <li>• You can add multiple images - press Enter or click Add after each URL</li>
-            <li>• Images will be displayed in the order you add them</li>
-            <li>• Click the X button on any image preview to remove it</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

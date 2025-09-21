@@ -13,18 +13,15 @@ const gallerySchema = new mongoose.Schema({
     trim: true
   },
 
-  images: {
-    type: [String],
-    required: true,
-    validate: {
-      validator: function (val) {
-        return val.length > 0;
-      },
-      message: 'At least one image is required.'
+  images: [
+    {
+      url: { type: String, required: true },
+      public_id: { type: String, required: true }
     }
-  }
+  ]
 }, {
   timestamps: true
 });
+
 const Gallery = mongoose.model('Gallery', gallerySchema);
-export default Gallery
+export default Gallery;

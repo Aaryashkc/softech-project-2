@@ -7,13 +7,20 @@ export interface GalleryType {
   _id: string;
   title: string;
   description: string;
-  images: string[];
+  images: Array<{
+    url: string;
+    public_id: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Gallery input type (without _id or timestamps)
-export type GalleryInput = Omit<GalleryType, "_id" | "createdAt" | "updatedAt">;
+// Gallery input type (without _id or timestamps) - for creating galleries, images are just URLs
+export type GalleryInput = {
+  title: string;
+  description: string;
+  images: string[]; // Base64 strings when creating
+};
 
 // Error response type
 interface ErrorResponse extends Error {

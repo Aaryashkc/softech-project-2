@@ -9,7 +9,9 @@ import {
   Star, 
   Loader2, 
   Newspaper,
-  ExternalLink 
+  ExternalLink,
+  Upload,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -135,6 +137,9 @@ const AddNewsPage: React.FC = () => {
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
 
   // News categories
   const categoryOptions = [
@@ -165,6 +170,58 @@ const AddNewsPage: React.FC = () => {
         [name]: ''
       }));
     }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Clear image error
+    if (errors.image) {
+      setErrors(prev => ({ ...prev, image: '' }));
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, image: '' }));
+    
+    // Reset file input
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const isValidUrl = (string: string): boolean => {
@@ -199,10 +256,8 @@ const AddNewsPage: React.FC = () => {
       newErrors.category = 'Category is required';
     }
 
-    if (!formData.image.trim()) {
-      newErrors.image = 'Image URL is required';
-    } else if (!isValidUrl(formData.image)) {
-      newErrors.image = 'Please enter a valid image URL';
+    if (!imageFile && !formData.image) {
+      newErrors.image = 'Image is required';
     }
 
     if (!formData.source.trim()) {
@@ -228,8 +283,23 @@ const AddNewsPage: React.FC = () => {
     }
 
     try {
-      console.log('Submitting news article:', formData);
-      await createNews(formData);
+      setIsUploading(true);
+      
+      let imageData = formData.image;
+      
+      // Convert image to base64 if a file was selected
+      if (imageFile) {
+        imageData = await convertToBase64(imageFile);
+      }
+
+      const submitData = {
+        ...formData,
+        image: imageData
+      };
+
+      console.log('Submitting news article:', submitData);
+      await createNews(submitData);
+      
       // Reset form on success
       setFormData({
         title: '',
@@ -242,7 +312,14 @@ const AddNewsPage: React.FC = () => {
         link: ''
       });
       setErrors({});
+      removeImage();
+      
+      toast.success('Article published successfully!');
     } catch (error) {
+      console.error('Error creating news article:', error);
+      toast.error('Failed to publish article');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -258,6 +335,7 @@ const AddNewsPage: React.FC = () => {
       link: ''
     });
     setErrors({});
+    removeImage();
   };
 
   return (
@@ -340,33 +418,54 @@ const AddNewsPage: React.FC = () => {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div className="space-y-2">
-              <InputField
-                label="Featured Image URL"
-                name="image"
-                icon={Image}
-                placeholder="https://example.com/image.jpg"
-                required
-                value={formData.image}
-                onChange={handleInputChange}
-                error={errors.image}
-                type="url"
-              />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Image className="w-4 h-4" />
+                Featured Image
+                <span className="text-red-500">*</span>
+              </label>
               
-              {/* Image Preview */}
-              {formData.image && isValidUrl(formData.image) && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
+              {!imagePreview ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                  </label>
+                </div>
+              ) : (
+                <div className="relative">
                   <img
-                    src={formData.image}
+                    src={imagePreview}
                     alt="Article preview"
                     className="w-full max-w-md h-48 object-cover rounded-lg shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
-                    }}
                   />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {imageFile?.name} ({((imageFile?.size || 0) / 1024 / 1024).toFixed(1)}MB)
+                  </p>
                 </div>
+              )}
+              
+              {errors.image && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <span className="w-4 h-4">⚠️</span>
+                  {errors.image}
+                </p>
               )}
             </div>
 
@@ -423,19 +522,19 @@ const AddNewsPage: React.FC = () => {
                 type="button"
                 onClick={clearForm}
                 className="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
+                disabled={isLoading || isUploading}
               >
                 Clear Form
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isUploading}
                 className="w-full sm:flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isLoading ? (
+                {isLoading || isUploading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Publishing...
+                    {isUploading ? 'Uploading...' : 'Publishing...'}
                   </>
                 ) : (
                   <>
@@ -447,19 +546,6 @@ const AddNewsPage: React.FC = () => {
             </div>
           </div>
         </form>
-
-        {/* Tips */}
-        <div className="mt-6 sm:mt-8 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-          <h3 className="font-medium text-blue-900 mb-2">📰 Publishing Tips:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Write clear, engaging titles that accurately represent the content</li>
-            <li>• Keep excerpts concise but informative to give readers a preview</li>
-            <li>• Choose high-quality, relevant images that enhance the story</li>
-            <li>• Always verify and link to the original source article</li>
-            <li>• Use featured articles sparingly for the most important news</li>
-            <li>• Double-check all URLs to ensure they're working and accessible</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

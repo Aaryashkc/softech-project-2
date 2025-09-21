@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../stores/useEventStore';
 import type { EventInput } from '../../stores/useEventStore';
-import { Calendar, Clock, MapPin, FileText, Image, Plus, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, FileText, Image, Plus, Loader2, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const InputField = ({ 
@@ -64,6 +64,9 @@ const AddEventPage: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<EventInput>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -81,6 +84,54 @@ const AddEventPage: React.FC = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP)');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Clear any existing errors
+    if (errors.image) {
+      setErrors(prev => ({ ...prev, image: '' }));
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, image: '' }));
+  };
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Partial<EventInput> = {};
 
@@ -90,22 +141,13 @@ const AddEventPage: React.FC = () => {
     if (!formData.location.trim()) newErrors.location = 'Location is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     
-    // Validate image URL format
-    if (formData.image && !isValidUrl(formData.image)) {
-      newErrors.image = 'Please enter a valid image URL';
+    // Image is required (you can make this optional if needed)
+    if (!imageFile && !formData.image) {
+      newErrors.image = 'Image is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const isValidUrl = (string: string): boolean => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,8 +159,29 @@ const AddEventPage: React.FC = () => {
     }
 
     try {
-      console.log('Submitting form data:', formData);
-      await createEvent(formData);
+      let imageData = formData.image;
+
+      // If there's a new image file, convert it to base64
+      if (imageFile) {
+        setUploadingImage(true);
+        try {
+          imageData = await convertToBase64(imageFile);
+        } catch (error) {
+          toast.error('Failed to process image');
+          setUploadingImage(false);
+          return;
+        }
+        setUploadingImage(false);
+      }
+
+      const eventData = {
+        ...formData,
+        image: imageData
+      };
+
+      console.log('Submitting form data:', eventData);
+      await createEvent(eventData);
+      
       // Reset form on success
       setFormData({
         title: '',
@@ -128,9 +191,27 @@ const AddEventPage: React.FC = () => {
         description: '',
         image: ''
       });
+      setImageFile(null);
+      setImagePreview('');
+      setErrors({});
+      
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     }
+  };
+
+  const clearForm = () => {
+    setFormData({
+      title: '',
+      date: '',
+      time: '',
+      location: '',
+      description: '',
+      image: ''
+    });
+    setImageFile(null);
+    setImagePreview('');
+    setErrors({});
   };
 
   return (
@@ -195,33 +276,58 @@ const AddEventPage: React.FC = () => {
               error={errors.location}
             />
 
-            <InputField
-              label="Image URL"
-              name="image"
-              type="url"
-              icon={Image}
-              placeholder="https://example.com/image.jpg"
-              value={formData.image}
-              onChange={handleInputChange}
-              error={errors.image}
-            />
-
-            {/* Image Preview */}
-            {formData.image && isValidUrl(formData.image) && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Image Preview</label>
-                <div className="border rounded-lg p-4 bg-gray-50">
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Image className="w-4 h-4" />
+                Event Image
+                <span className="text-red-500">*</span>
+              </label>
+              
+              {!imagePreview ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                      <p className="text-gray-600 mb-2">Click to upload an image</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, GIF, WebP up to 5MB</p>
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="relative">
                   <img
-                    src={formData.image}
+                    src={imagePreview}
                     alt="Event preview"
                     className="w-full h-48 object-cover rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
-                    }}
                   />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                    {imageFile?.name}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              
+              {errors.image && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <span className="w-4 h-4">⚠️</span>
+                  {errors.image}
+                </p>
+              )}
+            </div>
 
             {/* Description */}
             <div className="space-y-2">
@@ -253,31 +359,21 @@ const AddEventPage: React.FC = () => {
             <div className="flex gap-4 pt-6">
               <button
                 type="button"
-                onClick={() => {
-                  setFormData({
-                    title: '',
-                    date: '',
-                    time: '',
-                    location: '',
-                    description: '',
-                    image: ''
-                  });
-                  setErrors({});
-                }}
+                onClick={clearForm}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
+                disabled={isLoading || uploadingImage}
               >
                 Clear Form
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || uploadingImage}
                 className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isLoading ? (
+                {isLoading || uploadingImage ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating...
+                    {uploadingImage ? 'Processing Image...' : 'Creating Event...'}
                   </>
                 ) : (
                   <>
@@ -289,16 +385,6 @@ const AddEventPage: React.FC = () => {
             </div>
           </div>
         </form>
-
-        {/* Tips */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">💡 Image URL Tips:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Use direct image URLs</li>
-            <li>• Make sure the image URL is publicly accessible</li>
-            <li>• Right-click on any image and select "Copy image address"</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

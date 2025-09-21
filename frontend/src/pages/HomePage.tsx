@@ -1,11 +1,178 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Heart, Users, Briefcase } from 'lucide-react';
+import { ArrowRight, Heart, Users, Briefcase, X, Facebook, Twitter, Instagram, Youtube, Mail } from 'lucide-react';
 import Profile from "../assets/profile.jpeg";
 
 const HomePage: React.FC = () => {
+  const [isSocialMenuOpen, setIsSocialMenuOpen] = useState(true);
+
+  const toggleSocialMenu = () => {
+    setIsSocialMenuOpen(!isSocialMenuOpen);
+  };
+
   return (
-    <div>
+    <div className="relative">
+      {/* Social Media Menu - Desktop Only */}
+      <div className={`hidden md:block fixed top-1/2 right-0 transform -translate-y-1/2 z-50 transition-transform duration-300 ease-in-out ${
+        isSocialMenuOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <div className="bg-white shadow-2xl rounded-l-2xl overflow-hidden">
+          {/* Toggle Button */}
+          <button
+            onClick={toggleSocialMenu}
+            className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full bg-red-700 hover:bg-red-800 text-white p-3 rounded-l-lg transition-colors duration-200 ${
+              isSocialMenuOpen ? '' : 'animate-pulse'
+            }`}
+            aria-label="Toggle social media menu"
+          >
+            {isSocialMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <div className="flex flex-col space-y-1">
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+              </div>
+            )}
+          </button>
+
+          {/* Social Media Links */}
+          <div className="p-4 space-y-3">
+            <div className="text-center mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">Connect With Me</h3>
+            </div>
+            
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+              aria-label="Facebook"
+            >
+              <Facebook className="h-6 w-6" />
+            </a>
+
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-12 h-12 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors duration-200"
+              aria-label="Twitter"
+            >
+              <Twitter className="h-6 w-6" />
+            </a>
+
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
+              aria-label="Instagram"
+            >
+              <Instagram className="h-6 w-6" />
+            </a>
+
+            <a
+              href="https://youtube.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+              aria-label="YouTube"
+            >
+              <Youtube className="h-6 w-6" />
+            </a>
+
+            <a
+              href="mailto:ranjitlama2039@gmail.com"
+              className="flex items-center justify-center w-12 h-12 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors duration-200"
+              aria-label="Email"
+            >
+              <Mail className="h-6 w-6" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Social Menu (Bottom) */}
+      <div className="fixed bottom-4 right-4 z-50 md:hidden">
+        <button
+          onClick={toggleSocialMenu}
+          className="bg-red-700 hover:bg-red-800 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
+          aria-label="Toggle social media menu"
+        >
+          {isSocialMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <div className="flex flex-col space-y-1">
+              <div className="w-1 h-1 bg-white rounded-full"></div>
+              <div className="w-1 h-1 bg-white rounded-full"></div>
+              <div className="w-1 h-1 bg-white rounded-full"></div>
+            </div>
+          )}
+        </button>
+
+        {/* Mobile Social Links */}
+        {isSocialMenuOpen && (
+          <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-4 space-y-3">
+            <div className="text-center mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">Connect</h3>
+            </div>
+            
+            <div className="flex space-x-3">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-5 w-5" />
+              </a>
+
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors duration-200"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
+
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+            </div>
+
+            <div className="flex space-x-3">
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                aria-label="YouTube"
+              >
+                <Youtube className="h-5 w-5" />
+              </a>
+
+              <a
+                href="mailto:contact@ranjittamang.com"
+                className="flex items-center justify-center w-10 h-10 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors duration-200"
+                aria-label="Email"
+              >
+                <Mail className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-red-700 via-red-600 to-red-800 text-white">
         <div className="absolute inset-0 bg-black opacity-20"></div>

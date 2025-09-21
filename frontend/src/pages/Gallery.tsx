@@ -12,7 +12,7 @@ const Gallery: React.FC = () => {
   // Fetch galleries on component mount
   useEffect(() => {
     fetchGalleries();
-  }, [fetchGalleries]);
+  }, []); // Remove fetchGalleries dependency to prevent multiple calls
 
   // Keyboard navigation for fullscreen mode
   useEffect(() => {
@@ -33,7 +33,7 @@ const Gallery: React.FC = () => {
           break;
         case ' ':
           e.preventDefault();
-          if (isVideo(selectedCollection.images[fullscreenIndex])) {
+          if (isVideo(getImageUrl(selectedCollection.images[fullscreenIndex]))) {
             // No custom play/pause logic here, rely on native controls
           }
           break;
@@ -82,6 +82,11 @@ const Gallery: React.FC = () => {
     return /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(url);
   };
 
+  // Helper function to get image URL from image object
+  const getImageUrl = (image: { url: string; public_id: string } | string) => {
+    return typeof image === 'string' ? image : image.url;
+  };
+
   const openCollection = (collection: GalleryType): void => {
     setSelectedCollection(collection);
     setCurrentView('collection');
@@ -116,7 +121,7 @@ const Gallery: React.FC = () => {
   const FullscreenModal: React.FC = () => {
     if (fullscreenIndex === null || !selectedCollection) return null;
 
-    const currentMedia = selectedCollection.images[fullscreenIndex];
+    const currentMedia = getImageUrl(selectedCollection.images[fullscreenIndex]);
     const isMediaVideo = isVideo(currentMedia);
 
     return (
@@ -219,10 +224,10 @@ const Gallery: React.FC = () => {
               >
                 {/* Thumbnail */}
                 <div className="relative flex-1">
-                  {isVideo(gallery.images[0]) ? (
+                  {isVideo(getImageUrl(gallery.images[0])) ? (
                     <div className="relative">
                       <video
-                        src={gallery.images[0]}
+                        src={getImageUrl(gallery.images[0])}
                         className="w-full h-64 object-cover"
                         muted
                         onError={(e) => {
@@ -236,7 +241,7 @@ const Gallery: React.FC = () => {
                     </div>
                   ) : (
                     <img 
-                      src={gallery.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                      src={getImageUrl(gallery.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image'} 
                       alt={gallery.title}
                       className="w-full h-64 object-cover"
                       onError={(e) => {
@@ -315,10 +320,10 @@ const Gallery: React.FC = () => {
                   className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => openFullscreen(index)}
                 >
-                  {isVideo(media) ? (
+                  {isVideo(getImageUrl(media)) ? (
                     <div className="relative">
                       <video
-                        src={media}
+                        src={getImageUrl(media)}
                         className="w-full h-64 object-cover"
                         muted
                         onError={(e) => {
@@ -337,7 +342,7 @@ const Gallery: React.FC = () => {
                     </div>
                   ) : (
                     <img 
-                      src={media || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                      src={getImageUrl(media) || 'https://via.placeholder.com/400x300?text=No+Image'} 
                       alt={`${selectedCollection.title} - Photo ${index + 1}`}
                       className="w-full h-64 object-cover"
                       onError={(e) => {

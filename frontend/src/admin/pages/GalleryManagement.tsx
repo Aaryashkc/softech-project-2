@@ -13,6 +13,11 @@ const isVideo = (url: string) => {
   return /\.(mp4|webm|ogg)$/i.test(url);
 };
 
+// Helper function to get image URL from image object
+const getImageUrl = (image: { url: string; public_id: string } | string) => {
+  return typeof image === 'string' ? image : image.url;
+};
+
 const GalleryManagement: React.FC = () => {
   const { galleries, fetchGalleries, deleteGallery, isLoading, updateGallery } = useGalleryStore();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,7 +37,7 @@ const GalleryManagement: React.FC = () => {
     };
 
     loadGalleries();
-  }, [fetchGalleries]);
+  }, []); // Remove fetchGalleries dependency to prevent multiple calls
 
   // Handle view gallery
   const handleViewGallery = (gallery: GalleryWithId) => {
@@ -66,10 +71,12 @@ const GalleryManagement: React.FC = () => {
   const handleSaveEdit = async (updatedGallery: GalleryWithId) => {
     try {
       setIsEditing(true);
+      // Extract URLs from image objects for the update
+      const imageUrls = updatedGallery.images.map(img => getImageUrl(img));
       await updateGallery(updatedGallery._id, {
         title: updatedGallery.title,
         description: updatedGallery.description,
-        images: updatedGallery.images
+        images: imageUrls
       });
       setShowEditModal(false);
       setSelectedGallery(null);
@@ -95,9 +102,13 @@ const GalleryManagement: React.FC = () => {
   // Handle adding a new image
   const handleAddImage = () => {
     if (currentImageUrl.trim() && selectedGallery) {
+      const newImage = {
+        url: currentImageUrl.trim(),
+        public_id: `temp_${Date.now()}` // Temporary ID for new images
+      };
       const updatedGallery = {
         ...selectedGallery,
-        images: [...selectedGallery.images, currentImageUrl.trim()]
+        images: [...selectedGallery.images, newImage]
       };
       setSelectedGallery(updatedGallery);
       setCurrentImageUrl('');
@@ -143,9 +154,9 @@ const GalleryManagement: React.FC = () => {
                 <div className="grid grid-cols-2 h-full gap-1">
                   {/* Main photo/video takes left half */}
                   <div className="relative">
-                    {isVideo(gallery.images[0]) ? (
+                    {isVideo(getImageUrl(gallery.images[0])) ? (
                       <video
-                        src={gallery.images[0]}
+                        src={getImageUrl(gallery.images[0])}
                         controls
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -154,7 +165,7 @@ const GalleryManagement: React.FC = () => {
                       />
                     ) : (
                       <img
-                        src={gallery.images[0]}
+                        src={getImageUrl(gallery.images[0])}
                         alt={gallery.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -167,9 +178,9 @@ const GalleryManagement: React.FC = () => {
                   <div className="grid grid-rows-2 gap-1">
                     {gallery.images.slice(1, 3).map((media, index) => (
                       <div key={index} className="relative">
-                        {isVideo(media) ? (
+                        {isVideo(getImageUrl(media)) ? (
                           <video
-                            src={media}
+                            src={getImageUrl(media)}
                             controls
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -178,7 +189,7 @@ const GalleryManagement: React.FC = () => {
                           />
                         ) : (
                           <img
-                            src={media}
+                            src={getImageUrl(media)}
                             alt={`${gallery.title} ${index + 2}`}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -191,9 +202,9 @@ const GalleryManagement: React.FC = () => {
                     {/* Show count overlay if more than 4 photos/videos */}
                     {gallery.images.length > 4 && (
                       <div className="relative">
-                        {isVideo(gallery.images[3]) ? (
+                        {isVideo(getImageUrl(gallery.images[3])) ? (
                           <video
-                            src={gallery.images[3]}
+                            src={getImageUrl(gallery.images[3])}
                             controls
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -202,7 +213,7 @@ const GalleryManagement: React.FC = () => {
                           />
                         ) : (
                           <img
-                            src={gallery.images[3]}
+                            src={getImageUrl(gallery.images[3])}
                             alt={`${gallery.title} 4`}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -318,9 +329,9 @@ const GalleryManagement: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                   {selectedGallery.images.slice(0, 4).map((media, index) => (
                     <div key={index} className="relative aspect-square">
-                      {isVideo(media) ? (
+                      {isVideo(getImageUrl(media)) ? (
                         <video
-                          src={media}
+                          src={getImageUrl(media)}
                           controls
                           className="w-full h-full object-cover rounded-lg"
                           onError={(e) => {
@@ -329,7 +340,7 @@ const GalleryManagement: React.FC = () => {
                         />
                       ) : (
                         <img
-                          src={media}
+                          src={getImageUrl(media)}
                           alt={`${selectedGallery.title} ${index + 1}`}
                           className="w-full h-full object-cover rounded-lg"
                           onError={(e) => {
@@ -451,9 +462,9 @@ const GalleryManagement: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {selectedGallery.images.map((media, index) => (
                       <div key={index} className="relative group">
-                        {isVideo(media) ? (
+                        {isVideo(getImageUrl(media)) ? (
                           <video
-                            src={media}
+                            src={getImageUrl(media)}
                             controls
                             className="w-full h-24 object-cover rounded-md border"
                             onError={(e) => {
@@ -462,7 +473,7 @@ const GalleryManagement: React.FC = () => {
                           />
                         ) : (
                           <img
-                            src={media}
+                            src={getImageUrl(media)}
                             alt={`Gallery image ${index + 1}`}
                             className="w-full h-24 object-cover rounded-md border"
                             onError={(e) => {
