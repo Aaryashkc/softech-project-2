@@ -53,7 +53,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-gray-900">Ranjit Tamang</span>
+              <span className="text-xl font-bold text-gray-900 hover:text-red-700">Ranjit Tamang</span>
             </Link>
           </div>
 

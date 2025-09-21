@@ -302,6 +302,7 @@ const Gallery: React.FC = () => {
             </button>
             <div className="text-center">
               <h1 className="text-4xl font-bold mb-4">{selectedCollection.title}</h1>
+              <h2 className="text-md mb-4">{selectedCollection.description}</h2>
               <div className="flex items-center justify-center text-red-100">
                 <Calendar className="h-5 w-5 mr-2" />
                 {formatDate(selectedCollection.createdAt)}
