@@ -17,7 +17,6 @@ export interface NewsArticle {
   updatedAt?: string;
 }
 
-// Input type for create/update (without _id and timestamps)
 export type NewsInput = Omit<NewsArticle, "_id" | "createdAt" | "updatedAt">;
 
 // Error type
