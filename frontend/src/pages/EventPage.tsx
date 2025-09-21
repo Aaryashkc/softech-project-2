@@ -9,12 +9,10 @@ interface EventWithStatus extends EventType {
 const EventsPage: React.FC = () => {
   const { events, fetchEvents, isLoading } = useEventStore();
 
-  // Fetch events on component mount
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Process events with status
   const { upcomingEvents, completedEvents } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
