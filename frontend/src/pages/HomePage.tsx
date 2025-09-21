@@ -37,9 +37,8 @@ const HomePage: React.FC = () => {
           </button>
 
           {/* Social Media Links */}
-          <div className="p-4 space-y-3">
+          <div className="p-3 space-y-4">
             <div className="text-center mb-4">
-              <h3 className="text-sm font-semibold text-gray-900">Connect With Me</h3>
             </div>
             
             <a
@@ -115,7 +114,6 @@ const HomePage: React.FC = () => {
         {isSocialMenuOpen && (
           <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-4 space-y-3">
             <div className="text-center mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Connect</h3>
             </div>
             
             <div className="flex space-x-3">
