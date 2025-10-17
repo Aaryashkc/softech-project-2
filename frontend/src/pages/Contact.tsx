@@ -17,7 +17,7 @@ const Contact: React.FC = () => {
     message: ''
   });
 
-  const { loading, error, success, sendContact, reset } = useContactStore();
+  const { loading, error, success, sendContact } = useContactStore();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

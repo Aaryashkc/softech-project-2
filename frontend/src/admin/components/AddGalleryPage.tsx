@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGalleryStore } from '../../stores/useGalleryStore';
 import type { GalleryInput } from '../../stores/useGalleryStore';
-import { FileText, Image, Plus, Loader2, X, Upload } from 'lucide-react';
+import { FileText, Image, Loader2, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const InputField = ({ 
@@ -202,7 +202,7 @@ const AddGalleryPage: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
 
-    const files = Array.from(e.dataTransfer.files);
+    // const files = Array.from(e.dataTransfer.files);
     const validFiles = validateFiles(e.dataTransfer.files);
     
     if (validFiles.length === 0) return;
