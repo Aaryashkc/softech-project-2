@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" })); 
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cors({
-    origin: ["http://localhost:5173", "https://softech-project-2.vercel.app"],
+    origin: ["http://localhost:5173", "https://softech-project-2.vercel.app", "https://ranjittamang.com"],
     credentials: true, 
 }
 ))
