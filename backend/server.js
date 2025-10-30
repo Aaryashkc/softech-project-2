@@ -13,7 +13,7 @@ import newsRoutes from './routes/news.route.js';
 import interviewRoutes from './routes/interview.route.js';
 import contactRoutes from './routes/contact.route.js';
 
-const port= process.env.PORT;
+const port= process.env.PORT || 5001;
 const app = express();
 
 app.use(cookieParser());
