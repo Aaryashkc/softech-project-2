@@ -4,8 +4,6 @@ import type { InterviewInput } from '../../stores/useInterviewStore';
 import { 
   FileText, 
   Image, 
-  Calendar, 
-  Tag, 
   Star, 
   Loader2, 
   Mic,
@@ -119,8 +117,6 @@ const AddInterviewPage: React.FC = () => {
   const [formData, setFormData] = useState<InterviewInput>({
     title: '',
     excerpt: '',
-    date: new Date().toISOString().split('T')[0],
-    category: '',
     platform: '',
     featured: false,
     image: '',
@@ -130,8 +126,6 @@ const AddInterviewPage: React.FC = () => {
   interface FormErrors {
     title?: string;
     excerpt?: string;
-    date?: string;
-    category?: string;
     platform?: string;
     image?: string;
     link?: string;
@@ -141,22 +135,6 @@ const AddInterviewPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
-
-  // Interview categories
-  const categoryOptions = [
-    { value: 'business', label: 'Business & Finance' },
-    { value: 'technology', label: 'Technology & Innovation' },
-    { value: 'politics', label: 'Politics & Government' },
-    { value: 'entertainment', label: 'Entertainment & Media' },
-    { value: 'sports', label: 'Sports & Athletics' },
-    { value: 'science', label: 'Science & Research' },
-    { value: 'health', label: 'Health & Medicine' },
-    { value: 'education', label: 'Education & Academia' },
-    { value: 'lifestyle', label: 'Lifestyle & Culture' },
-    { value: 'startup', label: 'Startup & Entrepreneurship' },
-    { value: 'opinion', label: 'Opinion & Commentary' },
-    { value: 'other', label: 'Other' }
-  ];
 
   // Interview platforms
   const platformOptions = [
@@ -268,14 +246,6 @@ const AddInterviewPage: React.FC = () => {
       newErrors.excerpt = 'Excerpt must be less than 300 characters';
     }
 
-    if (!formData.date) {
-      newErrors.date = 'Interview date is required';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-
     if (!formData.platform) {
       newErrors.platform = 'Platform is required';
     }
@@ -324,8 +294,6 @@ const AddInterviewPage: React.FC = () => {
       setFormData({
         title: '',
         excerpt: '',
-        date: new Date().toISOString().split('T')[0],
-        category: '',
         platform: '',
         featured: false,
         image: '',
@@ -345,8 +313,6 @@ const AddInterviewPage: React.FC = () => {
     setFormData({
       title: '',
       excerpt: '',
-      date: new Date().toISOString().split('T')[0],
-      category: '',
       platform: '',
       featured: false,
       image: '',
@@ -416,43 +382,17 @@ const AddInterviewPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Date */}
-            <InputField
-              label="Interview Date"
-              name="date"
-              icon={Calendar}
-              placeholder=""
-              required
-              value={formData.date}
+            {/* Platform */}
+            <SelectField
+              label="Platform"
+              name="platform"
+              icon={Users}
+              value={formData.platform}
               onChange={handleInputChange}
-              error={errors.date}
-              type="date"
+              options={platformOptions}
+              error={errors.platform}
+              required
             />
-
-            {/* Category and Platform Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SelectField
-                label="Category"
-                name="category"
-                icon={Tag}
-                value={formData.category}
-                onChange={handleInputChange}
-                options={categoryOptions}
-                error={errors.category}
-                required
-              />
-
-              <SelectField
-                label="Platform"
-                name="platform"
-                icon={Users}
-                value={formData.platform}
-                onChange={handleInputChange}
-                options={platformOptions}
-                error={errors.platform}
-                required
-              />
-            </div>
 
             {/* Image Upload */}
             <div className="space-y-2">

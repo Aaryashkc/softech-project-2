@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Eye, Calendar, MapPin, Clock, X } from 'lucide-react';
+import { Edit, Trash2, Eye, Calendar, MapPin, Clock, X, Sparkles } from 'lucide-react';
 import { useEventStore, type EventType } from '../../stores/useEventStore';
 
 interface Event extends Omit<EventType, '_id'> {
@@ -51,11 +51,12 @@ const EventManagement: React.FC = () => {
     try {
       await useEventStore.getState().updateEvent(updatedEvent._id, {
         title: updatedEvent.title,
+        description: updatedEvent.description,
         date: updatedEvent.date,
         time: updatedEvent.time,
         location: updatedEvent.location,
-        description: updatedEvent.description,
-        image: updatedEvent.image
+        image: updatedEvent.image,
+        isComingSoon: updatedEvent.isComingSoon
       });
       setShowEditModal(false);
       setSelectedEvent(null);
@@ -64,7 +65,8 @@ const EventManagement: React.FC = () => {
   };
 
   // Format date for display
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'TBA';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -73,7 +75,8 @@ const EventManagement: React.FC = () => {
   };
 
   // Format time for display
-  const formatTime = (timeString: string) => {
+  const formatTime = (timeString?: string) => {
+    if (!timeString) return 'TBA';
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
@@ -95,12 +98,19 @@ const EventManagement: React.FC = () => {
         {events.map((event) => (
           <div key={event._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
             {/* Event Image */}
-            <div className="h-48 bg-gray-200 overflow-hidden">
+            <div className="h-48 bg-gray-200 overflow-hidden relative">
               <img
                 src={event.image}
                 alt={event.title}
                 className="w-full h-full object-cover"
               />
+              {/* Coming Soon Badge */}
+              {event.isComingSoon && (
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+                  <Sparkles size={14} />
+                  COMING SOON
+                </div>
+              )}
             </div>
 
             {/* Event Content */}
@@ -109,23 +119,33 @@ const EventManagement: React.FC = () => {
                 {event.title}
               </h3>
               
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Calendar size={16} className="mr-2" />
-                  {formatDate(event.date)}
+              {!event.isComingSoon && (
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Calendar size={16} className="mr-2" />
+                    {formatDate(event.date)}
+                  </div>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <Clock size={16} className="mr-2" />
+                    {formatTime(event.time)}
+                  </div>
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <MapPin size={16} className="mr-2" />
+                    {event.location || 'TBA'}
+                  </div>
                 </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Clock size={16} className="mr-2" />
-                  {formatTime(event.time)}
+              )}
+
+              {event.isComingSoon && (
+                <div className="mb-4 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-blue-700 text-sm font-medium text-center">
+                    Details will be announced soon!
+                  </p>
                 </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <MapPin size={16} className="mr-2" />
-                  {event.location}
-                </div>
-              </div>
+              )}
 
               <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                {event.description}
+                {event.description || 'No description available'}
               </p>
 
               {/* Action Buttons */}
@@ -139,7 +159,7 @@ const EventManagement: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleEditEvent(event)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
+                  className="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-2 px-3 rounded text-sm flex items-center justify-center gap-1 transition-colors"
                   disabled={isLoading}
                 >
                   <Edit size={16} />
@@ -174,43 +194,59 @@ const EventManagement: React.FC = () => {
                 </button>
               </div>
               
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <img
                   src={selectedEvent.image}
                   alt={selectedEvent.title}
                   className="w-full h-64 object-cover rounded-lg"
                 />
+                {selectedEvent.isComingSoon && (
+                  <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
+                    <Sparkles size={16} />
+                    COMING SOON
+                  </div>
+                )}
               </div>
               
               <h3 className="text-xl font-semibold mb-4">{selectedEvent.title}</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center text-gray-700">
-                  <Calendar size={20} className="mr-3 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Date</p>
-                    <p>{formatDate(selectedEvent.date)}</p>
+              {!selectedEvent.isComingSoon ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center text-gray-700">
+                      <Calendar size={20} className="mr-3 text-blue-700" />
+                      <div>
+                        <p className="font-medium">Date</p>
+                        <p>{formatDate(selectedEvent.date)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <Clock size={20} className="mr-3 text-blue-700" />
+                      <div>
+                        <p className="font-medium">Time</p>
+                        <p>{formatTime(selectedEvent.time)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-gray-700 md:col-span-2">
+                      <MapPin size={20} className="mr-3 text-blue-700" />
+                      <div>
+                        <p className="font-medium">Location</p>
+                        <p>{selectedEvent.location || 'TBA'}</p>
+                      </div>
+                    </div>
                   </div>
+                </>
+              ) : (
+                <div className="mb-4 py-4 px-6 bg-blue-50 border-2 border-blue-700 rounded-lg">
+                  <p className="text-blue-800 text-center font-medium">
+                    📅 Event details will be announced soon. Stay tuned!
+                  </p>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <Clock size={20} className="mr-3 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Time</p>
-                    <p>{formatTime(selectedEvent.time)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center text-gray-700 md:col-span-2">
-                  <MapPin size={20} className="mr-3 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Location</p>
-                    <p>{selectedEvent.location}</p>
-                  </div>
-                </div>
-              </div>
+              )}
               
               <div>
                 <p className="font-medium text-gray-700 mb-2">Description</p>
-                <p className="text-gray-600">{selectedEvent.description}</p>
+                <p className="text-gray-600">{selectedEvent.description || 'No description available'}</p>
               </div>
             </div>
           </div>
@@ -253,6 +289,14 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
     });
   };
 
+  const handleComingSoonToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setFormData({
+      ...formData,
+      isComingSoon: isChecked
+    });
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -268,6 +312,24 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
           </div>
 
           <div className="space-y-4">
+            {/* Coming Soon Toggle */}
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-700 rounded-lg p-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isComingSoon}
+                  onChange={handleComingSoonToggle}
+                  className="w-5 h-5 text-blue-700 border-gray-300 rounded focus:ring-blue-700 cursor-pointer"
+                />
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-800">Mark as Coming Soon</span>
+                </div>
+              </label>
+              <p className="text-sm text-gray-600 mt-2 ml-8">
+                Enable this to show "Coming Soon" badge. Date, time, and location will be optional.
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Event Title
@@ -277,8 +339,21 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description || ''}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
               />
             </div>
 
@@ -290,10 +365,10 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
                 <input
                   type="date"
                   name="date"
-                  value={formData.date}
+                  value={formData.date || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  disabled={formData.isComingSoon}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
               <div>
@@ -303,10 +378,10 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
                 <input
                   type="time"
                   name="time"
-                  value={formData.time}
+                  value={formData.time || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  disabled={formData.isComingSoon}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
             </div>
@@ -318,10 +393,10 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
               <input
                 type="text"
                 name="location"
-                value={formData.location}
+                value={formData.location || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                disabled={formData.isComingSoon}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
 
@@ -334,21 +409,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
                 required
               />
             </div>
@@ -357,14 +418,14 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+                className="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-md transition-colors font-medium"
               >
                 Save Changes
               </button>
               <button
                 type="button"
                 onClick={onCancel}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md transition-colors"
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md transition-colors font-medium"
               >
                 Cancel
               </button>

@@ -18,7 +18,11 @@ const NewsPage = () => {
   const allContent = useMemo(() => {
     const mappedNews = news.map((n) => ({ ...n, type: 'news' as const }));
     const mappedInterviews = interviews.map((i) => ({ ...i, type: 'interview' as const }));
-    return [...mappedNews, ...mappedInterviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...mappedNews, ...mappedInterviews].sort((a, b) => {
+      const aDate = a.type === 'news' ? new Date(a.date).getTime() : new Date(a.createdAt || 0).getTime();
+      const bDate = b.type === 'news' ? new Date(b.date).getTime() : new Date(b.createdAt || 0).getTime();
+      return bDate - aDate;
+    });
   }, [news, interviews]);
 
   const getFilteredContent = () => {
@@ -113,10 +117,7 @@ const NewsPage = () => {
         <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">{interview.title}</h3>
         <p className="text-gray-600 mb-4 line-clamp-3">{interview.excerpt}</p>
         <div className="flex items-center justify-between">
-          <div className="flex items-center text-gray-500 text-sm">
-            <Calendar className="h-4 w-4 mr-1" />
-            {formatDate(interview.date)}
-          </div>
+          <div />
           <button
             onClick={() => handleNavigation(interview.link)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"

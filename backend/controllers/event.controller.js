@@ -4,7 +4,7 @@ import cloudinary from '../lib/cloudinary.js';
 // Create Event
 export const createEvent = async (req, res) => {
   try {
-    const { title, date, time, location, description, image } = req.body;
+    const { title, date, time, location, description, image, isComingSoon } = req.body;
 
     if (!image) {
       return res.status(400).json({ message: 'Image is required' });
@@ -15,11 +15,12 @@ export const createEvent = async (req, res) => {
 
     const event = new Event({
       title,
-      date,
+      description,
+      date: date || Date.now(), 
       time,
       location,
-      description,
-      image: uploadRes.secure_url, // save Cloudinary URL
+      image: uploadRes.secure_url,
+      isComingSoon: isComingSoon || false,
     });
 
     await event.save();
@@ -53,23 +54,33 @@ export const getEventById = async (req, res) => {
 // Update Event
 export const updateEvent = async (req, res) => {
   try {
-    const { title, date, time, location, description, image } = req.body;
+    const { title, date, time, location, description, image, isComingSoon } = req.body;
 
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
     // If new image is uploaded, replace old one in Cloudinary
-    if (image) {
-      // Optional: delete old image from Cloudinary if you have public_id stored somewhere
+    if (image && image !== event.image) {
+      // Delete old image from Cloudinary
+      if (event.image) {
+        const publicId = event.image.split('/').slice(-2).join('/').split('.')[0];
+        try {
+          await cloudinary.uploader.destroy(publicId);
+        } catch (err) {
+          console.log('Error deleting old image:', err);
+        }
+      }
+      
       const uploadRes = await cloudinary.uploader.upload(image, { folder: 'events' });
       event.image = uploadRes.secure_url;
     }
 
     event.title = title || event.title;
-    event.date = date || event.date;
-    event.time = time || event.time;
-    event.location = location || event.location;
-    event.description = description || event.description;
+    event.description = description !== undefined ? description : event.description;
+    event.date = date !== undefined ? date : event.date;
+    event.time = time !== undefined ? time : event.time;
+    event.location = location !== undefined ? location : event.location;
+    event.isComingSoon = isComingSoon !== undefined ? isComingSoon : event.isComingSoon;
 
     const updatedEvent = await event.save();
     res.json(updatedEvent);
@@ -83,10 +94,16 @@ export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
+    
     if (event.image) {
-        const imageId = event.image.split('/').pop().split('.')[0];
-        await cloudinary.uploader.destroy(imageId);
-        }
+      const publicId = event.image.split('/').slice(-2).join('/').split('.')[0];
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.log('Error deleting image:', err);
+      }
+    }
+    
     await event.deleteOne();
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {

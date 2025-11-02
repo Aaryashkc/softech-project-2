@@ -7,8 +7,6 @@ export interface Interview {
   _id: string;
   title: string;
   excerpt: string;
-  date: string;
-  category: string;
   platform: string;
   featured: boolean;
   image: string;

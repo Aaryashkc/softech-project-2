@@ -8,27 +8,28 @@ const eventSchema = mongoose.Schema({
   },
   date:{
     type: Date,
-    required: true,
+    default: Date.now,
     trim:true,
   },
   time:{
     type: String,
-    required: true,
   },
   location:{
     type: String,
-    required: true,
     trim:true,
   },
   description:{
     type: String,
-    required: true,
     trim:true,
   },
   image:{
     type: String,
     required: true,
     trim:true,
+  },
+  isComingSoon: {
+    type: Boolean,
+    default: false,
   },
 
 

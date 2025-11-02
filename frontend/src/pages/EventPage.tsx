@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Loader2, Sparkles } from 'lucide-react';
 import { useEventStore, type EventType } from '../stores/useEventStore';
 
 interface EventWithStatus extends EventType {
@@ -13,12 +13,16 @@ const EventsPage: React.FC = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const { upcomingEvents, completedEvents } = useMemo(() => {
+  const { upcomingEvents, completedEvents, comingSoonEvents } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const eventsWithStatus = events.map(event => {
-      const eventDate = new Date(event.date);
+    // Separate coming soon events
+    const comingSoon = events.filter(event => event.isComingSoon);
+    const regularEvents = events.filter(event => !event.isComingSoon);
+
+    const eventsWithStatus = regularEvents.map(event => {
+      const eventDate = new Date(event.date || '');
       const status = eventDate >= today ? 'upcoming' : 'completed';
       return { ...event, status } as EventWithStatus;
     });
@@ -26,20 +30,22 @@ const EventsPage: React.FC = () => {
     // Sort events by date (soonest first for upcoming, most recent first for completed)
     const sortedUpcoming = eventsWithStatus
       .filter(event => event.status === 'upcoming')
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime());
       
     const sortedCompleted = eventsWithStatus
       .filter(event => event.status === 'completed')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime());
 
     return {
       upcomingEvents: sortedUpcoming,
-      completedEvents: sortedCompleted
+      completedEvents: sortedCompleted,
+      comingSoonEvents: comingSoon.map(event => ({ ...event, status: 'upcoming' as const }))
     };
   }, [events]);
 
   // Format date for display
-  const formatDate = (dateStr: string): string => {
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return 'Date TBA';
     try {
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return 'Date not specified';
@@ -69,13 +75,20 @@ const EventsPage: React.FC = () => {
           }}
         />
         <div className="absolute top-4 right-4">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            event.status === 'upcoming' 
-              ? 'bg-green-100 text-green-800 border-2 border-green-800' 
-              : 'bg-gray-100 text-gray-800 border-2 border-gray-800'
-          }`}>
-            {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
-          </span>
+          {event.isComingSoon ? (
+            <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 flex items-center gap-1.5 shadow-lg">
+              <Sparkles size={14} />
+              Coming Soon
+            </span>
+          ) : (
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              event.status === 'upcoming' 
+                ? 'bg-green-100 text-green-800 border-2 border-green-800' 
+                : 'bg-gray-100 text-gray-800 border-2 border-gray-800'
+            }`}>
+              {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
+            </span>
+          )}
         </div>
       </div>
       
@@ -84,22 +97,30 @@ const EventsPage: React.FC = () => {
           <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
         </div>
         
-        <p className="text-gray-600 mb-4 flex-grow">{event.description}</p>
+        <p className="text-gray-600 mb-4 flex-grow">{event.description || 'Event details coming soon...'}</p>
         
-        <div className="space-y-2 mt-auto">
-          <div className="flex items-center text-gray-600">
-            <Calendar className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
-            <span className="text-sm">{formatDate(event.date)}</span>
+        {event.isComingSoon ? (
+          <div className="mt-auto py-3 px-4 bg-blue-50 border-2 border-blue-600 rounded-lg">
+            <p className="text-blue-800 text-sm font-medium text-center">
+              📅 Details will be announced soon!
+            </p>
           </div>
-          <div className="flex items-center text-gray-600">
-            <Clock className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
-            <span className="text-sm">{event.time}</span>
+        ) : (
+          <div className="space-y-2 mt-auto">
+            <div className="flex items-center text-gray-600">
+              <Calendar className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
+              <span className="text-sm">{formatDate(event.date)}</span>
+            </div>
+            <div className="flex items-center text-gray-600">
+              <Clock className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
+              <span className="text-sm">{event.time || 'Time TBA'}</span>
+            </div>
+            <div className="flex items-start text-gray-600">
+              <MapPin className="h-4 w-4 mr-2 text-red-600 mt-0.5 flex-shrink-0" />
+              <span className="text-sm">{event.location || 'Location TBA'}</span>
+            </div>
           </div>
-          <div className="flex items-start text-gray-600">
-            <MapPin className="h-4 w-4 mr-2 text-red-600 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">{event.location}</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -125,6 +146,28 @@ const EventsPage: React.FC = () => {
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-red-600" />
         </div>
+      )}
+
+      {/* Coming Soon Events */}
+      {!isLoading && comingSoonEvents.length > 0 && (
+        <section className="py-16 bg-gradient-to-br from-blue-50 to-blue-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Sparkles className="h-8 w-8 text-blue-700" />
+                <h2 className="text-3xl font-bold text-gray-900">Coming Soon</h2>
+                <Sparkles className="h-8 w-8 text-blue-700" />
+              </div>
+              <div className="w-20 h-1 bg-blue-700 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Exciting events in the pipeline - stay tuned!</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {comingSoonEvents.map(event => (
+                <EventCard key={event._id} event={event} />
+              ))}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Upcoming Events */}
@@ -162,7 +205,7 @@ const EventsPage: React.FC = () => {
       )}
 
       {/* Show message if no events */}
-      {!isLoading && upcomingEvents.length === 0 && completedEvents.length === 0 && (
+      {!isLoading && upcomingEvents.length === 0 && completedEvents.length === 0 && comingSoonEvents.length === 0 && (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">No Events Available</h2>

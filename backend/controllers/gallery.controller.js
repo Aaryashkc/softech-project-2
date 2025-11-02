@@ -10,16 +10,22 @@ export const createGallery = async (req, res) => {
       return res.status(400).json({ error: "At least one image is required" });
     }
 
-    // Upload each image to Cloudinary
+    // Upload each image/video to Cloudinary
     const uploadedImages = await Promise.all(
-      images.map(async (img) => {
-        const uploadRes = await cloudinary.uploader.upload(img, {
-          folder: "gallery"
-        });
-        return {
-          url: uploadRes.secure_url,
-          public_id: uploadRes.public_id
-        };
+      images.map(async (img, index) => {
+        try {
+          const uploadRes = await cloudinary.uploader.upload(img, {
+            folder: "gallery",
+            resource_type: "auto" // Automatically detect if it's an image or video
+          });
+          return {
+            url: uploadRes.secure_url,
+            public_id: uploadRes.public_id
+          };
+        } catch (uploadError) {
+          console.error(`Error uploading file ${index + 1}:`, uploadError);
+          throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
+        }
       })
     );
 
@@ -32,7 +38,12 @@ export const createGallery = async (req, res) => {
     const saved = await newGallery.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error creating gallery:', err);
+    const errorMessage = err.message || 'Failed to create gallery';
+    res.status(400).json({ 
+      error: errorMessage,
+      message: errorMessage 
+    });
   }
 };
 
@@ -65,18 +76,24 @@ export const updateGallery = async (req, res) => {
     const gallery = await Gallery.findById(req.params.id);
     if (!gallery) return res.status(404).json({ error: 'Gallery not found' });
 
-    // Upload new images if provided
+    // Upload new images/videos if provided
     let uploadedImages = gallery.images;
     if (images && images.length > 0) {
       uploadedImages = await Promise.all(
-        images.map(async (img) => {
-          const uploadRes = await cloudinary.uploader.upload(img, {
-            folder: "gallery"
-          });
-          return {
-            url: uploadRes.secure_url,
-            public_id: uploadRes.public_id
-          };
+        images.map(async (img, index) => {
+          try {
+            const uploadRes = await cloudinary.uploader.upload(img, {
+              folder: "gallery",
+              resource_type: "auto" // Automatically detect if it's an image or video
+            });
+            return {
+              url: uploadRes.secure_url,
+              public_id: uploadRes.public_id
+            };
+          } catch (uploadError) {
+            console.error(`Error uploading file ${index + 1}:`, uploadError);
+            throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
+          }
         })
       );
     }

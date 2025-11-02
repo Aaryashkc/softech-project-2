@@ -4,11 +4,11 @@ import Interview from '../models/interview.model.js';
 // CREATE
 export const createInterview = async (req, res) => {
   try {
-    const { title, excerpt, date, category, platform, featured, link } = req.body;
+    const { title, excerpt, platform, featured, link } = req.body;
     let { image } = req.body;
 
-    if (!title || !excerpt || !date || !category || !platform || !link) {
-      return res.status(400).json({ message: 'All fields are required except featured' });
+    if (!title || !excerpt || !platform || !link) {
+      return res.status(400).json({ message: 'Title, excerpt, platform, link and image are required' });
     }
 
     if (image) {
@@ -23,8 +23,6 @@ export const createInterview = async (req, res) => {
     const newInterview = new Interview({
       title,
       excerpt,
-      date,
-      category,
       platform,
       featured: featured || false,
       image,
@@ -67,7 +65,7 @@ export const getInterviewById = async (req, res) => {
 // UPDATE
 export const updateInterview = async (req, res) => {
   try {
-    const { title, excerpt, date, category, platform, featured, link } = req.body;
+    const { title, excerpt, platform, featured, link } = req.body;
     let { image } = req.body;
 
     const interview = await Interview.findById(req.params.id);
@@ -91,8 +89,6 @@ export const updateInterview = async (req, res) => {
 
     interview.title = title || interview.title;
     interview.excerpt = excerpt || interview.excerpt;
-    interview.date = date || interview.date;
-    interview.category = category || interview.category;
     interview.platform = platform || interview.platform;
     interview.featured = featured !== undefined ? featured : interview.featured;
     interview.image = image;

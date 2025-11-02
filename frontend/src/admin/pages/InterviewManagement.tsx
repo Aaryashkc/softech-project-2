@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Eye, Calendar, Tag, Monitor, Star, ExternalLink } from 'lucide-react';
+import { Edit, Trash2, Eye, Monitor, Star, ExternalLink } from 'lucide-react';
 import { useInterviewStore } from '../../stores/useInterviewStore';
 import type { Interview as StoreInterview } from '../../stores/useInterviewStore';
 
@@ -77,20 +77,7 @@ const InterviewManagement: React.FC = () => {
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
+  // No date/category fields anymore
 
   return (
     <div className="p-6">
@@ -132,14 +119,6 @@ const InterviewManagement: React.FC = () => {
                 </h3>
                 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-gray-600 text-sm">
-                    <Calendar size={16} className="mr-2" />
-                    {formatDate(interview.date)}
-                  </div>
-                  <div className="flex items-center text-gray-600 text-sm">
-                    <Tag size={16} className="mr-2" />
-                    {interview.category}
-                  </div>
                   <div className="flex items-center text-gray-600 text-sm">
                     <Monitor size={16} className="mr-2" />
                     {interview.platform}
@@ -212,20 +191,6 @@ const InterviewManagement: React.FC = () => {
               <h3 className="text-xl font-semibold mb-4">{selectedInterview.title}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center text-gray-700">
-                  <Calendar size={20} className="mr-3 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Date</p>
-                    <p>{formatDate(selectedInterview.date)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <Tag size={20} className="mr-3 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Category</p>
-                    <p>{selectedInterview.category}</p>
-                  </div>
-                </div>
                 <div className="flex items-center text-gray-700 md:col-span-2">
                   <Monitor size={20} className="mr-3 text-blue-600" />
                   <div>
@@ -331,34 +296,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({ interview, onSa
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-            </div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

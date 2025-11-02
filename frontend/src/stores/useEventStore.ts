@@ -6,11 +6,12 @@ import { axiosInstance } from "../libs/axios";
 export interface EventType {
   _id: string;
   title: string;
-  date: string;
-  time: string;
-  location: string;
-  description: string;
+  description?: string;
+  date?: string;
+  time?: string;
+  location?: string;
   image: string;
+  isComingSoon: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

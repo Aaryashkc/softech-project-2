@@ -57,7 +57,9 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
       toast.success("Gallery created successfully");
     } catch (error) {
       const err = error as ErrorResponse;
-      toast.error(err.response?.data?.message || "Failed to create gallery");
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to create gallery";
+      console.error('Gallery creation error:', error);
+      toast.error(errorMessage);
       throw error;
     } finally {
       set({ isLoading: false });
