@@ -3,6 +3,7 @@ import { useGalleryStore } from '../../stores/useGalleryStore';
 import type { GalleryInput } from '../../stores/useGalleryStore';
 import { FileText, Image, Loader2, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { axiosInstance } from '../../libs/axios';
 
 const InputField = ({ 
   label, 
@@ -98,8 +99,8 @@ const AddGalleryPage: React.FC = () => {
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
     const validTypes = [...validImageTypes, ...validVideoTypes];
-    const maxSize = 10 * 1024 * 1024; // 10MB per file
-    const maxTotalSize = 100 * 1024 * 1024; // 100MB total (before base64 encoding)
+    const maxSize = 50 * 1024 * 1024; // 50MB per file
+    const maxTotalSize = 1000 * 1024 * 1024; // 1000MB total (soft client cap)
 
     let totalSize = imageFiles.reduce((sum, img) => sum + img.file.size, 0);
 
@@ -110,14 +111,14 @@ const AddGalleryPage: React.FC = () => {
       }
 
       if (file.size > maxSize) {
-        toast.error(`${file.name}: File size must be less than 10MB`);
+        toast.error(`${file.name}: File size must be less than 50MB`);
         return;
       }
 
       // Check total size (accounting for base64 encoding ~33% increase)
       const estimatedBase64Size = file.size * 1.33;
       if (totalSize + estimatedBase64Size > maxTotalSize) {
-        toast.error(`${file.name}: Total upload size would exceed 100MB limit. Please upload fewer files.`);
+        toast.error(`${file.name}: Total upload size would exceed 1000MB limit. Please upload fewer files or upload in multiple batches.`);
         return;
       }
 
@@ -288,15 +289,23 @@ const AddGalleryPage: React.FC = () => {
     }
 
     try {
-      // Prepare images array with base64 data
-      const imagesData = imageFiles.map(imageFile => imageFile.base64!);
-      
-      const submitData = {
+      // Upload sequentially to avoid large payloads
+      const uploaded: { url: string; public_id: string }[] = [];
+      toast.loading(`Uploading 0/${imageFiles.length}`, { id: 'uploading' });
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const base64 = file.base64!;
+        const res = await axiosInstance.post('/gallery/upload', { image: base64 });
+        uploaded.push(res.data);
+        toast.loading(`Uploading ${i + 1}/${imageFiles.length}`, { id: 'uploading' });
+      }
+      toast.dismiss('uploading');
+
+      const submitData: GalleryInput = {
         ...formData,
-        images: imagesData
+        images: uploaded,
       };
 
-      console.log('Submitting gallery data:', submitData);
       await createGallery(submitData);
       
       // Clean up object URLs
@@ -419,7 +428,7 @@ const AddGalleryPage: React.FC = () => {
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
                       <p className="text-sm text-gray-500">Images: PNG, JPG, WebP | Videos: MP4, WebM, MOV</p>
-                      <p className="text-sm text-gray-500">Max 10MB per file, 100MB total</p>
+                      <p className="text-sm text-gray-500">Max 50MB per file, ~1000MB total</p>
                       <p className="text-sm text-gray-500">You can select multiple files at once</p>
                     </>
                   )}

@@ -1,10 +1,11 @@
 import express from 'express';
 import { protectRoute } from '../middleware/auth.middleware.js';
-import { createGallery, deleteGallery, getAllGalleries, getGalleryById, updateGallery } from '../controllers/gallery.controller.js';
+import { createGallery, deleteGallery, getAllGalleries, getGalleryById, updateGallery, uploadSingleMedia } from '../controllers/gallery.controller.js';
 
 const router = express.Router();
 
 router.post('/create', protectRoute, createGallery);
+router.post('/upload', protectRoute, uploadSingleMedia);
 
 router.get('/all', getAllGalleries);
 

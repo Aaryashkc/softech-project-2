@@ -19,7 +19,7 @@ export interface GalleryType {
 export type GalleryInput = {
   title: string;
   description: string;
-  images: string[]; // Base64 strings when creating
+  images: (string | { url: string; public_id: string })[];
 };
 
 // Error response type

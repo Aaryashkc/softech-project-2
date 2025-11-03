@@ -10,24 +10,31 @@ export const createGallery = async (req, res) => {
       return res.status(400).json({ error: "At least one image is required" });
     }
 
-    // Upload each image/video to Cloudinary
-    const uploadedImages = await Promise.all(
-      images.map(async (img, index) => {
-        try {
-          const uploadRes = await cloudinary.uploader.upload(img, {
-            folder: "gallery",
-            resource_type: "auto" // Automatically detect if it's an image or video
-          });
-          return {
-            url: uploadRes.secure_url,
-            public_id: uploadRes.public_id
-          };
-        } catch (uploadError) {
-          console.error(`Error uploading file ${index + 1}:`, uploadError);
-          throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
-        }
-      })
-    );
+    // If payload already contains uploaded objects, save directly
+    const first = images[0];
+    let uploadedImages;
+    if (typeof first === 'object' && first?.url && first?.public_id) {
+      uploadedImages = images;
+    } else {
+      // Upload each image/video to Cloudinary
+      uploadedImages = await Promise.all(
+        images.map(async (img, index) => {
+          try {
+            const uploadRes = await cloudinary.uploader.upload(img, {
+              folder: "gallery",
+              resource_type: "auto"
+            });
+            return {
+              url: uploadRes.secure_url,
+              public_id: uploadRes.public_id
+            };
+          } catch (uploadError) {
+            console.error(`Error uploading file ${index + 1}:`, uploadError);
+            throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
+          }
+        })
+      );
+    }
 
     const newGallery = new Gallery({
       title,
@@ -44,6 +51,24 @@ export const createGallery = async (req, res) => {
       error: errorMessage,
       message: errorMessage 
     });
+  }
+};
+
+// Upload a single image/video (base64) and return Cloudinary details
+export const uploadSingleMedia = async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) return res.status(400).json({ error: 'Image data is required' });
+
+    const uploadRes = await cloudinary.uploader.upload(image, {
+      folder: 'gallery',
+      resource_type: 'auto',
+    });
+
+    return res.status(200).json({ url: uploadRes.secure_url, public_id: uploadRes.public_id });
+  } catch (err) {
+    console.error('Error uploading single media:', err);
+    return res.status(400).json({ error: err.message || 'Failed to upload media' });
   }
 };
 

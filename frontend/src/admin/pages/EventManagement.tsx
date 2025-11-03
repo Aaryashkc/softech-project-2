@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Eye, Calendar, MapPin, Clock, X, Sparkles } from 'lucide-react';
+import { Edit, Trash2, Eye, Calendar, MapPin, Clock, X} from 'lucide-react';
 import { useEventStore, type EventType } from '../../stores/useEventStore';
 
 interface Event extends Omit<EventType, '_id'> {
@@ -107,7 +107,6 @@ const EventManagement: React.FC = () => {
               {/* Coming Soon Badge */}
               {event.isComingSoon && (
                 <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg">
-                  <Sparkles size={14} />
                   COMING SOON
                 </div>
               )}
@@ -202,7 +201,6 @@ const EventManagement: React.FC = () => {
                 />
                 {selectedEvent.isComingSoon && (
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
-                    <Sparkles size={16} />
                     COMING SOON
                   </div>
                 )}
