@@ -56,7 +56,7 @@ const NewsPage = () => {
         <img
           src={article.image}
           alt={article.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-64 object-cover"
         />
         {article.featured && (
           <div className="absolute top-4 left-4">
@@ -95,7 +95,7 @@ const NewsPage = () => {
         <img
           src={interview.image}
           alt={interview.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-64 object-cover"
         />
         {interview.featured && (
           <div className="absolute top-4 left-4">

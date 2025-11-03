@@ -98,7 +98,7 @@ const InterviewManagement: React.FC = () => {
           {interviews.map((interview) => (
             <div key={interview.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {/* Interview Image */}
-              <div className="h-48 bg-gray-200 overflow-hidden relative">
+              <div className="h-64 bg-gray-200 overflow-hidden relative">
                 <img
                   src={interview.image}
                   alt={interview.title}
@@ -178,7 +178,7 @@ const InterviewManagement: React.FC = () => {
                 <img
                   src={selectedInterview.image}
                   alt={selectedInterview.title}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-80 object-contain rounded-lg bg-black"
                 />
                 {selectedInterview.featured && (
                   <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-2 rounded-full text-sm flex items-center gap-1">
@@ -250,10 +250,22 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({ interview, onSa
     ...interview,
     id: interview.id || interview._id || '',
   });
+  const [imageFile, setImageFile] = useState<{ preview: string; base64: string; name: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleSubmit = () => {
     onSave({
       ...formData,
+      image: imageFile?.base64 || formData.image,
       id: formData.id || formData._id || '',
       _id: formData._id || formData.id || '',
     });
@@ -314,6 +326,18 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({ interview, onSa
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Current Image
+              </label>
+              <img
+                src={imageFile?.preview || formData.image}
+                alt="Interview"
+                className="w-full h-48 object-cover rounded-lg border mb-3"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+                }}
+              />
+
+              {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                 Image URL
               </label>
               <input
@@ -321,9 +345,59 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({ interview, onSa
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+              /> */}
+
+              {!imageFile ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    id="interview-image-upload"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                      if (!validTypes.includes(file.type)) return;
+                      const maxSize = 5 * 1024 * 1024;
+                      if (file.size > maxSize) return;
+                      setIsProcessing(true);
+                      try {
+                        const preview = URL.createObjectURL(file);
+                        const base64 = await convertToBase64(file);
+                        setImageFile({ preview, base64, name: file.name });
+                      } finally {
+                        setIsProcessing(false);
+                      }
+                    }}
+                    className="hidden"
+                    disabled={isProcessing}
+                  />
+                  <label htmlFor="interview-image-upload" className="cursor-pointer">
+                    {isProcessing ? (
+                      <div className="text-gray-600">Processing image...</div>
+                    ) : (
+                      <div className="text-gray-600">Click to upload new image</div>
+                    )}
+                  </label>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 bg-green-50 p-2 rounded">
+                    <p><strong>File:</strong> {imageFile.name}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (imageFile?.preview) URL.revokeObjectURL(imageFile.preview);
+                      setImageFile(null);
+                    }}
+                    className="px-3 py-2 bg-red-500 text-white rounded-md text-sm"
+                  >
+                    Remove uploaded image
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>

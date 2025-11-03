@@ -118,7 +118,7 @@ const NewsManagement: React.FC = () => {
         {newsArticles.map((article) => (
           <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
             {/* Article Image */}
-            <div className="h-48 bg-gray-200 overflow-hidden relative">
+            <div className="h-64 bg-gray-200 overflow-hidden relative">
               <img
                 src={article.image}
                 alt={article.title}
@@ -208,7 +208,7 @@ const NewsManagement: React.FC = () => {
                 <img
                   src={selectedArticle.image}
                   alt={selectedArticle.title}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-80 object-contain rounded-lg bg-black"
                 />
                 {selectedArticle.featured && (
                   <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-2 rounded-full text-sm flex items-center gap-1">

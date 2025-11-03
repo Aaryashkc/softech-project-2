@@ -68,7 +68,7 @@ const EventsPage: React.FC = () => {
         <img 
           src={event.image || 'https://via.placeholder.com/400x250?text=No+Image'} 
           alt={event.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-64 object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://via.placeholder.com/400x250?text=Image+Not+Available';

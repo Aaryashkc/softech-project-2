@@ -98,7 +98,7 @@ const EventManagement: React.FC = () => {
         {events.map((event) => (
           <div key={event._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
             {/* Event Image */}
-            <div className="h-48 bg-gray-200 overflow-hidden relative">
+            <div className="h-64 bg-gray-200 overflow-hidden relative">
               <img
                 src={event.image}
                 alt={event.title}
@@ -198,7 +198,7 @@ const EventManagement: React.FC = () => {
                 <img
                   src={selectedEvent.image}
                   alt={selectedEvent.title}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-80 object-contain rounded-lg bg-black"
                 />
                 {selectedEvent.isComingSoon && (
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
@@ -277,9 +277,25 @@ interface EditEventModalProps {
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel }) => {
   const [formData, setFormData] = useState<Event>({ ...event });
+  const [imageFile, setImageFile] = useState<{ preview: string; base64: string; name: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleSubmit = () => {
-    onSave(formData);
+    // If a new image was uploaded, replace image URL with base64
+    const payload: Event = {
+      ...formData,
+      image: imageFile?.base64 || formData.image,
+    };
+    onSave(payload);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -295,6 +311,37 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
       ...formData,
       isComingSoon: isChecked
     });
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please select a valid image (JPEG, PNG, WebP)');
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const preview = URL.createObjectURL(file);
+      const base64 = await convertToBase64(file);
+      setImageFile({ preview, base64, name: file.name });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const removeImage = () => {
+    if (imageFile?.preview) URL.revokeObjectURL(imageFile.preview);
+    setImageFile(null);
   };
 
   return (
@@ -402,6 +449,18 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Current Image
+              </label>
+              <img
+                src={imageFile?.preview || formData.image}
+                alt="Event"
+                className="w-full h-72 object-contain rounded-lg border mb-3 bg-gray-100"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+                }}
+              />
+
+              {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                 Image URL
               </label>
               <input
@@ -409,9 +468,41 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ event, onSave, onCancel
                 name="image"
                 value={formData.image}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700"
-                required
-              />
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 mb-3"
+              /> */}
+
+              {!imageFile ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    id="event-image-upload"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    disabled={isProcessing}
+                  />
+                  <label htmlFor="event-image-upload" className="cursor-pointer">
+                    {isProcessing ? (
+                      <div className="text-gray-600">Processing image...</div>
+                    ) : (
+                      <div className="text-gray-600">Click to upload new image</div>
+                    )}
+                  </label>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 bg-green-50 p-2 rounded">
+                    <p><strong>File:</strong> {imageFile.name}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="px-3 py-2 bg-red-500 text-white rounded-md text-sm"
+                  >
+                    Remove uploaded image
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">
