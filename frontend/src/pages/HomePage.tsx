@@ -141,15 +141,17 @@ const HomePage: React.FC = () => {
                 <FontAwesomeIcon icon={faXTwitter} className="h-6 w-6" />
               </a>
 
-             <a
+              <a
                 href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 hover:from-yellow-500 hover:via-pink-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200"
+                className="flex items-center justify-center w-10 h-10
+                          bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)] 
+                          hover:opacity-90 text-white rounded-lg transition-all duration-200"
                 aria-label="Instagram"
               >
                 <Instagram className="h-6 w-6" />
-              </a>
+            </a>
             </div>
 
             <div className="flex space-x-3">
