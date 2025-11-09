@@ -1,4 +1,5 @@
-import { Mail, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Mail, MapPin, Instagram, Facebook, Twitter, Phone } from 'lucide-react';
+import whatsapp from "../assets/whatsapp.jpg"
 
 const Footer = () => {
   return (
@@ -46,16 +47,21 @@ const Footer = () => {
               {/* Social Media Links */}
               <div className="flex items-center space-x-2">
                 <Instagram className="h-4 w-4 text-red-600" />
-                <a href="https://www.instagram.com/" className="text-sm" target='_blank'>Instagram</a>
+                <a href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr" className="text-sm" target='_blank'>Instagram</a>
               </div>
               <div className="flex items-center space-x-2">
                 <Facebook className="h-4 w-4 text-red-600" />
-                <a href="https://www.facebook.com/" className="text-sm" target='_blank'>FaceBook</a>
+                <a href="https://www.facebook.com/share/1CdNVLQUVS/?mibextid=wwXIfr" className="text-sm" target='_blank'>FaceBook</a>
               </div>
               <div className="flex items-center space-x-2">
                 <Twitter className="h-4 w-4 text-red-600" />
-                <a href="https://www.twitter.com/" className="text-sm" target='_blank'>Twitter</a>
+                <a href="https://x.com/cmranjittamang?s=21" className="text-sm" target='_blank'>Twitter</a>
               </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-red-600" />
+                <a href="#" className="text-sm" target='_blank'>WhatsApp</a>
+              </div>
+              <img src={whatsapp} alt="WhatsApp" className="h-30 w-30 text-red-600" loading='lazy' />
             </div>
           </div>
         </div>

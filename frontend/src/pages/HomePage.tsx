@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
             </div>
             
             <a
-              href="https://facebook.com"
+              href="https://www.facebook.com/share/1CdNVLQUVS/?mibextid=wwXIfr"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
@@ -52,7 +52,7 @@ const HomePage: React.FC = () => {
             </a>
 
             <a
-              href="https://twitter.com"
+              href="https://x.com/cmranjittamang?s=21"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-12 h-12 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors duration-200"
@@ -62,7 +62,7 @@ const HomePage: React.FC = () => {
             </a>
 
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
@@ -72,7 +72,7 @@ const HomePage: React.FC = () => {
             </a>
 
             <a
-              href="https://youtube.com"
+              href="https://www.youtube.com/@cmranjit?si=hheMpS4aVbesyNL5"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
