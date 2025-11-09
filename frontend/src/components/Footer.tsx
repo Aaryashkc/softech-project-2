@@ -1,5 +1,7 @@
-import { Mail, MapPin, Instagram, Facebook, Twitter, Phone } from 'lucide-react';
+import { Mail, MapPin, Instagram, Facebook, Phone } from 'lucide-react';
 import whatsapp from "../assets/whatsapp.jpg"
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const Footer = () => {
   return (
@@ -54,7 +56,7 @@ const Footer = () => {
                 <a href="https://www.facebook.com/share/1CdNVLQUVS/?mibextid=wwXIfr" className="text-sm" target='_blank'>FaceBook</a>
               </div>
               <div className="flex items-center space-x-2">
-                <Twitter className="h-4 w-4 text-red-600" />
+                <FontAwesomeIcon icon={faXTwitter} className="h-4 w-4 text-red-600" />
                 <a href="https://x.com/cmranjittamang?s=21" className="text-sm" target='_blank'>Twitter</a>
               </div>
               <div className="flex items-center space-x-2">

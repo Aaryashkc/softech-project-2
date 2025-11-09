@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Heart, Users, Briefcase, X, Facebook, Twitter, Instagram, Youtube, Mail } from 'lucide-react';
+import { ArrowRight, Heart, Users, Briefcase, X, Facebook, Instagram, Youtube, Mail } from 'lucide-react';
 import Profile from "../assets/profile.jpeg";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 
 const HomePage: React.FC = () => {
   const [isSocialMenuOpen, setIsSocialMenuOpen] = useState(true);
@@ -51,25 +53,27 @@ const HomePage: React.FC = () => {
               <Facebook className="h-6 w-6" />
             </a>
 
-            <a
-              href="https://x.com/cmranjittamang?s=21"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-12 h-12 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors duration-200"
-              aria-label="Twitter"
-            >
-              <Twitter className="h-6 w-6" />
-            </a>
+          <a
+            href="https://x.com/cmranjittamang?s=21"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-12 h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors duration-200"
+            aria-label="Twitter"
+          >
+            <FontAwesomeIcon icon={faXTwitter} className="h-8 w-8" />
+          </a>
 
-            <a
-              href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
-              aria-label="Instagram"
-            >
-              <Instagram className="h-6 w-6" />
-            </a>
+          <a
+            href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-12 h-12 
+                      bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285AEB_90%)] 
+                      hover:opacity-90 text-white rounded-lg transition-all duration-200"
+            aria-label="Instagram"
+          >
+            <Instagram className="h-6 w-6" />
+          </a>
 
             <a
               href="https://www.youtube.com/@cmranjit?si=hheMpS4aVbesyNL5"
@@ -131,20 +135,20 @@ const HomePage: React.FC = () => {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors duration-200"
+                className="flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors duration-200"
                 aria-label="Twitter"
               >
-                <Twitter className="h-5 w-5" />
+                <FontAwesomeIcon icon={faXTwitter} className="h-6 w-6" />
               </a>
 
-              <a
-                href="https://instagram.com"
+             <a
+                href="https://www.instagram.com/_ranjittamang_?igsh=Y2w4bGJ4OHVyaXNj&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
+                className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 hover:from-yellow-500 hover:via-pink-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200"
                 aria-label="Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-6 w-6" />
               </a>
             </div>
 
