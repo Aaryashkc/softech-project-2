@@ -61,7 +61,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-red-600" />
-                <a href="#" className="text-sm" target='_blank'>WhatsApp</a>
+                <a href="#" className="text-sm">WhatsApp</a>
               </div>
               <img src={whatsapp} alt="WhatsApp" className="h-30 w-30 text-red-600" loading='lazy' />
             </div>
