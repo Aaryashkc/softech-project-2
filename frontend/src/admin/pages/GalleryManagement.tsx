@@ -326,37 +326,46 @@ const GalleryManagement: React.FC = () => {
                 </button>
               </div>
               <div className="mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                  {selectedGallery.images.slice(0, 4).map((media, index) => (
-                    <div key={index} className="relative aspect-square">
-                      {isVideo(getImageUrl(media)) ? (
-                        <video
-                          src={getImageUrl(media)}
-                          controls
-                          className="w-full h-full object-cover rounded-lg"
-                          onError={(e) => {
-                            (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={getImageUrl(media)}
-                          alt={`${selectedGallery.title} ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                          }}
-                        />
-                      )}
-                      {index === 3 && selectedGallery.images.length > 4 && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                          <span className="text-white text-lg font-bold">
-                            +{selectedGallery.images.length - 4} more
-                          </span>
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Gallery Images ({selectedGallery.images.length})
+                  </h3>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {selectedGallery.images.map((media, index) => (
+                        <div key={index} className="relative group">
+                          {isVideo(getImageUrl(media)) ? (
+                            <video
+                              src={getImageUrl(media)}
+                              controls
+                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                              onError={(e) => {
+                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={getImageUrl(media)}
+                              alt={`${selectedGallery.title} ${index + 1}`}
+                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
+                              }}
+                            />
+                          )}
+                          <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                            #{index + 1}
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
+                    {selectedGallery.images.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Images size={48} className="mx-auto mb-2 text-gray-300" />
+                        <p>No images in this gallery</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="mb-6">
@@ -459,38 +468,49 @@ const GalleryManagement: React.FC = () => {
                       Add Image
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {selectedGallery.images.map((media, index) => (
-                      <div key={index} className="relative group">
-                        {isVideo(getImageUrl(media)) ? (
-                          <video
-                            src={getImageUrl(media)}
-                            controls
-                            className="w-full h-24 object-cover rounded-md border"
-                            onError={(e) => {
-                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/150?text=Video+Not+Found';
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={getImageUrl(media)}
-                            alt={`Gallery image ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-md border"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-                            }}
-                          />
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label="Remove image"
-                        >
-                          <X size={14} />
-                        </button>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {selectedGallery.images.map((media, index) => (
+                        <div key={index} className="relative group">
+                          {isVideo(getImageUrl(media)) ? (
+                            <video
+                              src={getImageUrl(media)}
+                              controls
+                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                              onError={(e) => {
+                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={getImageUrl(media)}
+                              alt={`Gallery image ${index + 1}`}
+                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
+                              }}
+                            />
+                          )}
+                          <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                            #{index + 1}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                            aria-label="Remove image"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedGallery.images.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Images size={48} className="mx-auto mb-2 text-gray-300" />
+                        <p>No images in this gallery</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">

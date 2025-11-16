@@ -25,19 +25,18 @@ const Navbar = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
+    { name: 'Political Journey', href: '/about' },
+    { name: 'Achievements', href: '/achievements' },
+    { name: 'News & Interviews', href: '/news' },
     { 
       href: '/events', 
       name: 'Events', 
       hasDropdown: true,
       dropdownItems: [
         { href: '/events', label: 'Events' },
-        { href: '/news', label: 'News & Interviews' },
-        { href: '/gallery', label: 'Gallery' }
       ]
     },
-    { name: 'Political Journey', href: '/journey' },
-    { name: 'Achievements', href: '/achievements' },
+    { name: 'Gallery', href: '/gallery' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -103,10 +102,12 @@ const Navbar = () => {
                 ) : (
                   <Link
                     to={item.href}
-                    className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      isActive(item.href)
-                        ? 'text-red-700 border-b-2 border-red-700'
-                        : 'text-gray-700 hover:text-red-700'
+                    className={`px-5 py-3 text-sm font-medium transition-colors duration-200 ${
+                      item.name === 'Contact'
+                        ? 'bg-red-600 text-white rounded-md hover:bg-red-700'
+                        : isActive(item.href)
+                          ? 'text-red-700 border-b-2 border-red-700'
+                          : 'text-gray-700 hover:text-red-700'
                     }`}
                   >
                     {item.name}
@@ -178,9 +179,11 @@ const Navbar = () => {
                       to={item.href}
                       onClick={() => setIsOpen(false)}
                       className={`block px-3 py-2 text-base font-medium transition-colors duration-200 ${
-                        isActive(item.href)
-                          ? 'text-red-700 bg-red-50'
-                          : 'text-gray-700 hover:text-red-700 hover:bg-gray-50'
+                        item.name === 'Contact'
+                          ? 'bg-red-600 text-white rounded-md hover:bg-red-700'
+                          : isActive(item.href)
+                            ? 'text-red-700 bg-red-50'
+                            : 'text-gray-700 hover:text-red-700 hover:bg-gray-50'
                       }`}
                     >
                       {item.name}
