@@ -4,7 +4,6 @@ import { availableIcons, getIcon } from '../../config/icon.config';
 import { 
   MapPin, Plus, X, Save, Loader2, Target, Award, Calendar, User
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const JourneyManagement: React.FC = () => {
   const { journeyData, fetchJourney, updateJourney, isLoading } = useJourneyStore();

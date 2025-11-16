@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useHomeStore, type HomeData } from '../../stores/useHomeStore';
 import { availableIcons, getIcon } from '../../config/icon.config';
 import { 
-  User, Image as ImageIcon, FileText, Plus, X, Save, Loader2,
-  Home as HomeIcon, Target, Heart, Calendar, Upload
+  User, Plus, X, Save, Loader2,
+  Home as HomeIcon, Target, Heart, Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -35,9 +35,7 @@ const HomeManagement: React.FC = () => {
     }
   });
 
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string>('');
-  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 
   useEffect(() => {
     fetchHome();
@@ -213,7 +211,6 @@ const HomeManagement: React.FC = () => {
       return;
     }
 
-    setProfileImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       const preview = e.target?.result as string;

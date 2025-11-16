@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAboutPageStore, type AboutData } from '../../stores/useAboutPageStore';
 import { availableIcons, getIcon } from '../../config/icon.config';
 import { 
-  Plus, X, Save, Loader2, Upload, Image as ImageIcon
+  Plus, X, Save, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -37,7 +37,6 @@ const AboutManagement: React.FC = () => {
       }
     }
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchAbout();
@@ -269,7 +268,6 @@ const AboutManagement: React.FC = () => {
       return;
     }
 
-    setImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64Image = e.target?.result as string;
@@ -283,7 +281,6 @@ const AboutManagement: React.FC = () => {
     try {
       await updateAbout(formData as AboutData);
       toast.success('About page updated successfully!');
-      setImageFile(null);
     } catch (error) {
       toast.error('Failed to update about page');
     }

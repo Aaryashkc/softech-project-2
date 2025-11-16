@@ -28,7 +28,8 @@ interface ErrorResponse extends Error {
     status?: number;
     statusText?: string;
     data: {
-      message: string;
+      message?: string;
+      error?: string;
     };
   };
 }

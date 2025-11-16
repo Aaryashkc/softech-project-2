@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useContactPageStore, type ContactData } from '../../stores/useContactPageStore';
 import { availableIcons, getIcon } from '../../config/icon.config';
 import { 
-  Plus, X, Save, Loader2, Mail, Phone, MapPin, Clock, Users, MessageSquare, Calendar
+  Plus, X, Save, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
