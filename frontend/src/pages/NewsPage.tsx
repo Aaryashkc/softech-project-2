@@ -35,6 +35,9 @@ const NewsPage = () => {
   const featuredContent = filteredContent.filter((item) => item.featured);
   const regularContent = filteredContent.filter((item) => !item.featured);
 
+  // Fallback: latest two items across all content (news + interviews)
+  const fallbackContent = useMemo(() => allContent.slice(0, 2), [allContent]);
+
   const isLoading = newsLoading || interviewsLoading;
 
   const formatDate = (dateStr: string) => {
@@ -250,8 +253,19 @@ const NewsPage = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No content available in this category.</p>
+              <div>
+                <div className="text-center py-6">
+                  <p className="text-gray-500">No items in this category. Showing latest updates instead.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {fallbackContent.map((item) =>
+                    item.type === 'news' ? (
+                      <NewsCard key={`news-fallback-${item._id}`} article={item} />
+                    ) : (
+                      <InterviewCard key={`interview-fallback-${item._id}`} interview={item} />
+                    )
+                  )}
+                </div>
               </div>
             )}
           </div>
