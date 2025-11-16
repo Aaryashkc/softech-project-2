@@ -189,10 +189,14 @@ const HomePage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
+              <h1 className="text-2xl lg:text-3xl font-extralight mb-6 leading-tight">
+                {homeModel.hero.value}
+                {/* Visionary and Missionary OutLook */}
+              </h1>
               <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
                 {homeModel.hero.name}
               </h1>
-              <p className="text-xl lg:text-2xl mb-4 text-red-100">
+              <p className="text-xl font-semibold lg:text-2xl mb-4 text-gray-300">
                 {homeModel.hero.title}
               </p>
               <p className="text-lg mb-8 text-red-50 max-w-2xl">
@@ -216,11 +220,11 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="flex justify-center lg:justify-end">
-              <div className="w-80 h-80 bg-white rounded-full shadow-2xl flex items-center justify-center">
+              <div className="w-80 h-80 lg:w-120 lg:h-120 bg-white rounded-full shadow-2xl flex items-center justify-center">
                 <img 
                   src={homeModel.hero.profileImage}
                   alt={homeModel.hero.name}
-                  className="w-72 h-72 rounded-full object-cover"
+                  className="w-72 h-72 lg:w-112 lg:h-112 rounded-full object-cover"
                 />
               </div>
             </div>

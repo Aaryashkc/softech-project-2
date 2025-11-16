@@ -27,10 +27,8 @@ export const updateHome = async (req, res) => {
     let home = await Home.findOne();
     
     if (!home) {
-      // Create new if doesn't exist
       home = new Home({ hero, highlights, initiatives, cta });
     } else {
-      // Update existing
       if (hero) {
         // Handle profile image upload if it's a base64 string
         if (hero.profileImage && hero.profileImage.startsWith('data:image')) {

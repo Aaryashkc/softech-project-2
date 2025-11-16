@@ -10,6 +10,7 @@ export interface HomeButton {
 }
 
 export interface HomeHero {
+  value: string;
   name: string;
   title: string;
   description: string;

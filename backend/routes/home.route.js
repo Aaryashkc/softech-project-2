@@ -6,8 +6,6 @@ const router = express.Router();
 
 // Public route - get home data
 router.get('/', getHome);
-
-// Protected route - update home data
 router.put('/', protectRoute, updateHome);
 
 export default router;

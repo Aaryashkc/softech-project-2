@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const HomeSchema = new mongoose.Schema({
   hero: {
+    value: { type: String, required: true },
     name: { type: String, required: true },
     title: { type: String, required: true },
     description: { type: String, required: true },

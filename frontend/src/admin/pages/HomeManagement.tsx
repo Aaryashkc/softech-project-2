@@ -11,6 +11,7 @@ const HomeManagement: React.FC = () => {
   const { homeData, fetchHome, updateHome, isLoading } = useHomeStore();
   const [formData, setFormData] = useState<Partial<HomeData>>({
     hero: {
+      value: '',
       name: '',
       title: '',
       description: '',
@@ -285,6 +286,18 @@ const HomeManagement: React.FC = () => {
           </h2>
 
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                value <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.hero?.value || ''}
+                onChange={(e) => handleHeroChange('value', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Name <span className="text-red-500">*</span>
