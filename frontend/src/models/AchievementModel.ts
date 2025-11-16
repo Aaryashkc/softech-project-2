@@ -7,7 +7,6 @@ export const achievementModel = {
     subtitle: "A record of transformative leadership and meaningful contributions to Nepal's political landscape"
   },
 
-  // Key Statistics with expandable details
   stats: [
     {
       id: 1,
@@ -194,7 +193,8 @@ export const achievementModel = {
         outletColor: "text-red-700 bg-red-100",
         title: "Student Leadership Interview",
         description: "Featured interview discussing the role of student organizations in democratic oversight and government accountability during political crises.",
-        year: "2021"
+        year: "2021",
+        link: "https://theannapurnaexpress.com/news/interview-with-ranjit-tamang-4789"
       },
       {
         id: 2,
@@ -202,7 +202,7 @@ export const achievementModel = {
         outletColor: "text-blue-700 bg-blue-100",
         title: "Central Committee Appointment",
         description: "Coverage of historic youth inclusion initiative and appointment to CPN (Maoist Centre) Central Committee representing under-40 demographic.",
-        year: "December 2021"
+        year: "December 2021",
       },
       {
         id: 3,
@@ -210,12 +210,13 @@ export const achievementModel = {
         outletColor: "text-green-700 bg-green-100",
         title: "Campaign Leadership",
         description: "Reports on successful coordination of Tarai-Madhes Awareness Campaign and grassroots mobilization efforts across multiple districts.",
-        year: "February 2025"
+        year: "February 2025",
+        link: "https://radionepal.gov.np/news-detail/12345"
       }
     ]
   },
 
-  // Future Goals
+  // Future Goals 
   futureGoals: {
     title: "Ongoing Commitments",
     description: "Building on past achievements to create lasting change in Nepal's political and social landscape. The focus continues on empowering youth, strengthening democratic institutions, and ensuring that progressive values translate into meaningful policy outcomes.",

@@ -5,7 +5,7 @@ const HomeSchema = new mongoose.Schema({
     name: { type: String, required: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
-    profileImage: { type: String, required: true },
+    profileImage: { type: String, required: false, default: "" },
     buttons: [
       {
         text: { type: String, required: true },

@@ -1,79 +1,95 @@
-
+import Contact from '../models/contact.model.js';
 import nodemailer from 'nodemailer';
 
-export const sendContactEmail = async (req, res) => {
-  const { name, email, subject, message } = req.body;
-
+// Get Contact Page Data (Public - no auth required)
+export const getContact = async (req, res) => {
   try {
+    // Since there should only be one Contact document, we'll get the first one
+    let contact = await Contact.findOne();
+    
+    if (!contact) {
+      return res.status(404).json({ 
+        message: 'Contact page data not found. Please run seed script: npm run seed:contact' 
+      });
+    }
+    
+    res.json(contact);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update Contact Page Data (Protected - requires auth)
+export const updateContact = async (req, res) => {
+  try {
+    const { hero, contactInfo, additionalInfo } = req.body;
+
+    let contact = await Contact.findOne();
+    
+    if (!contact) {
+      // Create new if doesn't exist
+      contact = new Contact({ hero, contactInfo, additionalInfo });
+    } else {
+      // Update existing
+      if (hero) {
+        contact.hero = { ...contact.hero, ...hero };
+      }
+      
+      if (contactInfo) {
+        contact.contactInfo = { ...contact.contactInfo, ...contactInfo };
+      }
+      
+      if (additionalInfo) {
+        contact.additionalInfo = { ...contact.additionalInfo, ...additionalInfo };
+      }
+    }
+
+    const updatedContact = await contact.save();
+    res.json(updatedContact);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Send Contact Email (Public - form submission)
+export const sendContactEmail = async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Create transporter (configure with your email service)
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
-    const htmlContent = `
-      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="background: linear-gradient(135deg, #DC2525 0%, #FF8282 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 300;">New Contact Form Submission</h1>
-        </div>
-        
-        <div style="background: #fff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <div style="background:white; padding: 25px; border-radius: 6px; margin-bottom: 20px;">
-            <h2 style="color: #DC2525; margin-top: 0; font-size: 18px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">Contact Information</h2>
-
-            <div style="margin-bottom: 15px;">
-              <strong style="color: #495057; display: inline-block; width: 80px;">Name:</strong>
-              <span style="color: #495057; font-weight: 500;">${name}</span>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-              <strong style="color: #495057; display: inline-block; width: 80px;">Email:</strong>
-              <a href="mailto:${email}" style="color: #007bff; text-decoration: none;">${email}</a>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-              <strong style="color: #495057; display: inline-block; width: 80px;">Subject:</strong>
-              <span style="color: #6c757d;">${subject}</span>
-            </div>
-          </div>
-          
-          <div style="background: white; padding: 25px; border-radius: 6px;">
-            <h3 style="color: #DC2525; margin-top: 0; font-size: 16px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">Message</h3>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; border-left: 4px solid #DC2525; font-size: 14px; line-height: 1.7;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-          </div>
-          
-          <div style="margin-top: 20px; padding: 15px; background: #FFF7F1; border-radius: 4px; border-left: 4px solid #DC2525;">
-            <p style="margin: 0; font-size: 12px; color: #666;">
-              <strong>📧 Quick Actions:</strong> 
-              <a href="mailto:${email}?subject=Re: ${subject}" style="color: #007bff; text-decoration: none; margin-left: 10px;">Reply to ${name}</a>
-            </p>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px; padding: 15px; color: #6c757d; font-size: 12px;">
-          <p style="margin: 0;">This email was sent from your website contact form</p>
-          <p style="margin: 5px 0 0 0;">Received on ${new Date().toLocaleString()}</p>
-        </div>
-      </div>
-    `;
-
+    // Email content
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      replyTo: email, 
-      subject: `🔔 New Contact: ${subject}`,
-      html: htmlContent,
-      text: `New Contact Form Submission\n\nFrom: ${name} <${email}>\nSubject: ${subject}\n\nMessage:\n${message}\n\nReceived: ${new Date().toLocaleString()}`,
+      from: process.env.SMTP_USER,
+      to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+      subject: `Contact Form: ${subject}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      `,
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: 'Email sent successfully' });
-  } catch (err) {
-    console.error('Email sending error:', err);
-    res.status(500).json({ success: false, message: 'Email failed to send' });
+    res.json({ message: 'Message sent successfully' });
+  } catch (error) {
+    console.error('Email error:', error);
+    res.status(500).json({ message: 'Failed to send message. Please try again later.' });
   }
 };

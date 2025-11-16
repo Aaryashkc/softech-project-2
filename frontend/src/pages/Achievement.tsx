@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { achievementModel } from '../models/AchievementModel';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { useAchievementModel } from '../hooks/useAchievementModel';
 
 const Achievement: React.FC = () => {
   const [expandedStat, setExpandedStat] = useState<number | null>(null);
+  const { achievementModel, fetchAchievement, isLoading } = useAchievementModel();
 
-  const toggleStat = (id: number) => {
-    setExpandedStat(expandedStat === id ? null : id);
+  useEffect(() => {
+    fetchAchievement();
+  }, [fetchAchievement]);
+
+  const toggleStat = (index: number) => {
+    setExpandedStat(expandedStat === index ? null : index);
   };
+
+  if (isLoading || !achievementModel) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-red-700" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -29,24 +42,26 @@ const Achievement: React.FC = () => {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {achievementModel.stats.map((stat) => (
+            {achievementModel.stats.map((stat, index) => {
+              const IconComponent = stat.iconComponent;
+              return (
               <div 
-                key={stat.id} 
+                key={index} 
                 className={`text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer ${
-                  expandedStat === stat.id ? 'md:col-span-2 lg:col-span-4' : ''
+                  expandedStat === index ? 'md:col-span-2 lg:col-span-4' : ''
                 }`}
-                onClick={() => toggleStat(stat.id)}
+                onClick={() => toggleStat(index)}
               >
                 {/* Compact View */}
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <stat.icon className="h-8 w-8 text-red-700" />
+                  <IconComponent className="h-8 w-8 text-red-700" />
                 </div>
                 <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
                 <div className="text-gray-600 font-medium mb-2">{stat.label}</div>
                 
                 {/* Expand/Collapse Indicator */}
                 <div className="flex items-center justify-center mt-2">
-                  {expandedStat === stat.id ? (
+                  {expandedStat === index ? (
                     <ChevronUp className="h-5 w-5 text-red-700" />
                   ) : (
                     <ChevronDown className="h-5 w-5 text-gray-400" />
@@ -54,7 +69,7 @@ const Achievement: React.FC = () => {
                 </div>
 
                 {/* Expanded Details */}
-                {expandedStat === stat.id && (
+                {expandedStat === index && (
                   <div className="mt-6 pt-6 border-t border-gray-200 text-left animate-fadeIn">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">
                       {stat.details.title}
@@ -65,8 +80,8 @@ const Achievement: React.FC = () => {
                     <div className="bg-white rounded-lg p-6 shadow-sm">
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Highlights:</h4>
                       <ul className="space-y-3">
-                        {stat.details.highlights.map((highlight, index) => (
-                          <li key={index} className="flex items-start">
+                        {stat.details.highlights.map((highlight, highlightIndex) => (
+                          <li key={highlightIndex} className="flex items-start">
                             <span className="inline-block w-2 h-2 bg-red-600 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                             <span className="text-gray-700">{highlight}</span>
                           </li>
@@ -76,7 +91,8 @@ const Achievement: React.FC = () => {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -94,18 +110,20 @@ const Achievement: React.FC = () => {
           </div>
 
           <div className="space-y-16">
-            {achievementModel.achievements.map((category) => (
-              <div key={category.id} className="bg-white rounded-2xl shadow-lg p-8">
+            {achievementModel.achievements.map((category, categoryIndex) => {
+              const CategoryIcon = category.iconComponent;
+              return (
+              <div key={categoryIndex} className="bg-white rounded-2xl shadow-lg p-8">
                 <div className="flex items-center mb-8">
-                  <div className={`w-16 h-16 ${category.color} rounded-full flex items-center justify-center mr-6`}>
-                    <category.icon className="h-8 w-8 text-white" />
+                  <div className={`w-16 h-16 ${category.color || 'bg-red-600'} rounded-full flex items-center justify-center mr-6`}>
+                    <CategoryIcon className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900">{category.category}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {category.items.map((item) => (
-                    <div key={item.id} className="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors duration-200">
+                  {category.items.map((item, itemIndex) => (
+                    <div key={itemIndex} className="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors duration-200">
                       <h4 className="text-lg font-semibold text-gray-900 mb-3">{item.title}</h4>
                       <p className="text-gray-600 mb-4 text-sm leading-relaxed">{item.description}</p>
                       <div className="border-t pt-4">
@@ -116,7 +134,8 @@ const Achievement: React.FC = () => {
                   ))}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </section>
@@ -134,8 +153,8 @@ const Achievement: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {achievementModel.mediaRecognition.items.map((item) => (
-              <div key={item.id} className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
+            {achievementModel.mediaRecognition.items.map((item, index) => (
+              <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
                 <div className="mb-4">
                   <span className={`text-sm font-medium ${item.outletColor} px-3 py-1 rounded-full`}>
                     {item.outlet}
@@ -148,6 +167,16 @@ const Achievement: React.FC = () => {
                   {item.description}
                 </p>
                 <p className="text-xs text-gray-500">{item.year}</p>
+                {item.link?.toString().trim() ? (
+                  <a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-800 underline"
+                  >
+                    Read More
+                  </a>
+                ) : null}
               </div>
             ))}
           </div>

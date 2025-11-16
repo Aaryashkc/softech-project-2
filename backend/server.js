@@ -12,6 +12,10 @@ import galleryRoutes from './routes/gallery.route.js';
 import newsRoutes from './routes/news.route.js';
 import interviewRoutes from './routes/interview.route.js';
 import contactRoutes from './routes/contact.route.js';
+import homeRoutes from './routes/home.route.js';
+import achievementRoutes from './routes/achievement.route.js';
+import journeyRoutes from './routes/journey.route.js';
+import aboutRoutes from './routes/about.route.js';
 
 const port= process.env.PORT || 5001;
 const app = express();
@@ -31,6 +35,10 @@ app.use('/api/gallery', galleryRoutes)
 app.use('/api/news', newsRoutes)
 app.use('/api/interviews', interviewRoutes)
 app.use('/api/contact', contactRoutes)
+app.use('/api/home', homeRoutes)
+app.use('/api/achievement', achievementRoutes)
+app.use('/api/journey', journeyRoutes)
+app.use('/api/about', aboutRoutes)
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

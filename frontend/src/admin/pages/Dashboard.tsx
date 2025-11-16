@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus } from 'lucide-react';
+import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus, Home, Award, MapPin, Mail, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import EventManagement from './EventManagement';
 import GalleryManagement from './GalleryManagement';
 import NewsManagement from './NewsManagement';
 import InterviewManagement from './InterviewManagement';
+import HomeManagement from './HomeManagement';
+import AchievementManagement from './AchievementManagement';
+import JourneyManagement from './JourneyManagement';
+import ContactManagement from './ContactManagement';
+import AboutManagement from './AboutManagement';
 import toast from 'react-hot-toast';
 import AddEventPage from '../components/AddEventPage';
 import AddGalleryPage from '../components/AddGalleryPage';
@@ -13,7 +18,7 @@ import AddNewsPage from '../components/AddNewsPage';
 import AddInterviewPage from '../components/AddInterviewPage';
 
 // Types
-type SectionType = 'events' | 'gallery' | 'news' | 'interviews' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview';
+type SectionType = 'events' | 'gallery' | 'news' | 'interviews' | 'home' | 'achievement' | 'journey' | 'contact' | 'about' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview';
 
 interface SidebarProps {
   activeSection: SectionType;
@@ -43,6 +48,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const menuItems = [
+    { id: 'home' as SectionType, label: 'Home Page', icon: Home },
+    { id: 'achievement' as SectionType, label: 'Achievement Page', icon: Award },
+    { id: 'journey' as SectionType, label: 'Journey Page', icon: MapPin },
+    { id: 'contact' as SectionType, label: 'Contact Page', icon: Mail },
+    { id: 'about' as SectionType, label: 'About Page', icon: User },
     { id: 'events' as SectionType, label: 'Manage Events', icon: Calendar },
     { id: 'add-event' as SectionType, label: 'Add Event', icon: Plus },
     { id: 'gallery' as SectionType, label: 'Gallery Manager', icon: Image },
@@ -127,6 +137,16 @@ const AdminDashboard: React.FC = () => {
 
   const renderSection = () => {
     switch (activeSection) {
+      case 'home':
+        return <HomeManagement />;
+      case 'achievement':
+        return <AchievementManagement />;
+      case 'journey':
+        return <JourneyManagement />;
+      case 'contact':
+        return <ContactManagement />;
+      case 'about':
+        return <AboutManagement />;
       case 'events':
         return <EventManagement />;
       case 'add-event':

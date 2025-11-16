@@ -1,17 +1,31 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, X, Facebook, Instagram, Youtube, Mail } from 'lucide-react';
+import { ArrowRight, X, Facebook, Instagram, Youtube, Mail, Loader2 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
-import { homeModel } from '../models/HomeModel'; 
+import { useHomeModel } from '../hooks/useHomeModel'; 
 
 const HomePage: React.FC = () => {
   const [isSocialMenuOpen, setIsSocialMenuOpen] = useState(true);
+  const { homeModel, fetchHome, isLoading } = useHomeModel();
+
+  useEffect(() => {
+    fetchHome();
+  }, [fetchHome]);
 
   const toggleSocialMenu = () => {
     setIsSocialMenuOpen(!isSocialMenuOpen);
   };
+
+  // Show loading state while fetching data or if data is not available
+  if (isLoading || !homeModel) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-red-700" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -227,11 +241,11 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {homeModel.highlights.items.map((item) => {
+            {homeModel.highlights.items.map((item, index) => {
               const IconComponent = item.iconComponent;
               return (
                 <div 
-                  key={item.id}
+                  key={index}
                   className="text-center p-8 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -263,9 +277,9 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {homeModel.initiatives.items.map((initiative) => (
+            {homeModel.initiatives.items.map((initiative, index) => (
               <div 
-                key={initiative.id}
+                key={index}
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
               >
                 <img 

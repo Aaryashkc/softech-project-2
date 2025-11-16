@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon backend/server.js",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "seed:home": "node backend/scripts/seedHome.js",
+    "seed:achievement": "node backend/scripts/seedAchievement.js",
+    "seed:journey": "node backend/scripts/seedJourney.js",
+    "seed:contact": "node backend/scripts/seedContact.js",
+    "seed:about": "node backend/scripts/seedAbout.js"
   },
   "keywords": [],
   "author": "",

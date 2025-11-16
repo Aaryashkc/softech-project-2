@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Phone, MapPin, Clock, Send, Users, MessageSquare, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Loader2 } from 'lucide-react';
 import { useContactStore } from '../stores/useContactStore';
+import { useContactPageModel } from '../hooks/useContactPageModel';
 
 interface ContactFormData {
   name: string;
@@ -18,6 +19,11 @@ const Contact: React.FC = () => {
   });
 
   const { loading, error, success, sendContact } = useContactStore();
+  const { contactModel, isLoading } = useContactPageModel();
+
+  useEffect(() => {
+    // Data is fetched automatically by useContactPageModel hook
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -36,6 +42,14 @@ const Contact: React.FC = () => {
     }
   };
 
+  if (isLoading || !contactModel) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-red-700" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Hero Section */}
@@ -43,10 +57,10 @@ const Contact: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-              Get in Touch
+              {contactModel.hero.title}
             </h1>
             <p className="text-xl lg:text-2xl text-red-100 max-w-3xl mx-auto">
-              Connect with us to discuss Nepal's future, share your concerns, or get involved in our initiatives
+              {contactModel.hero.subtitle}
             </p>
           </div>
         </div>
@@ -55,40 +69,26 @@ const Contact: React.FC = () => {
       {/* Contact Information */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {contactModel.contactInfo.sectionTitle && (
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900">{contactModel.contactInfo.sectionTitle}</h2>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-            <div className="text-center p-8 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MapPin className="h-8 w-8 text-red-700" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Office Location</h3>
-              <p className="text-gray-600">
-                CPN (Maoist Centre)<br />
-                Central Committee Office<br />
-                Kathmandu, Nepal
-              </p>
-            </div>
-
-            <div className="text-center p-8 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Phone className="h-8 w-8 text-red-700" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Phone & Email</h3>
-              <p className="text-gray-600">
-                Email: ranjitlama2039@gmail.com<br />
-              </p>
-            </div>
-
-            <div className="text-center p-8 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="h-8 w-8 text-red-700" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Office Hours</h3>
-              <p className="text-gray-600">
-                Monday - Friday: 9:00 AM - 5:00 PM<br />
-                Saturday: 10:00 AM - 2:00 PM<br />
-                Sunday: Closed
-              </p>
-            </div>
+            {contactModel.contactInfo.items.map((item, index) => {
+              const IconComponent = item.iconComponent;
+              return (
+                <div key={index} className="text-center p-8 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <IconComponent className="h-8 w-8 text-red-700" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.title}</h3>
+                  <p className="text-gray-600 whitespace-pre-line">
+                    {item.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Contact Form and Office Info */}
@@ -194,62 +194,57 @@ const Contact: React.FC = () => {
             <div className="space-y-8">
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="flex items-center mb-6">
-                  <Users className="h-6 w-6 text-red-700 mr-3" />
-                  <h3 className="text-xl font-semibold text-gray-900">Public Engagement</h3>
+                  {(() => {
+                    const IconComponent = contactModel.additionalInfo.publicEngagement.iconComponent;
+                    return <IconComponent className="h-6 w-6 text-red-700 mr-3" />;
+                  })()}
+                  <h3 className="text-xl font-semibold text-gray-900">{contactModel.additionalInfo.publicEngagement.title}</h3>
                 </div>
                 <p className="text-gray-600 mb-4">
-                  We believe in open dialogue and community engagement. Your voice matters in shaping 
-                  Nepal's political future.
+                  {contactModel.additionalInfo.publicEngagement.description}
                 </p>
                 <ul className="space-y-2 text-gray-600">
-                  <li>• Regular community meetings and forums</li>
-                  <li>• Town halls for policy discussions</li>
-                  <li>• Youth engagement sessions</li>
-                  <li>• Grassroots consultation programs</li>
+                  {contactModel.additionalInfo.publicEngagement.items.map((item, index) => (
+                    <li key={index}>• {item}</li>
+                  ))}
                 </ul>
               </div>
 
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="flex items-center mb-6">
-                  <MessageSquare className="h-6 w-6 text-red-700 mr-3" />
-                  <h3 className="text-xl font-semibold text-gray-900">Response Time</h3>
+                  {(() => {
+                    const IconComponent = contactModel.additionalInfo.responseTime.iconComponent;
+                    return <IconComponent className="h-6 w-6 text-red-700 mr-3" />;
+                  })()}
+                  <h3 className="text-xl font-semibold text-gray-900">{contactModel.additionalInfo.responseTime.title}</h3>
                 </div>
                 <p className="text-gray-600 mb-4">
-                  We strive to respond to all inquiries promptly and thoroughly.
+                  {contactModel.additionalInfo.responseTime.description}
                 </p>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-700">General Inquiries</span>
-                    <span className="text-red-700 font-medium">24-48 hours</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-700">Meeting Requests</span>
-                    <span className="text-red-700 font-medium">3-5 business days</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-700">Media Inquiries</span>
-                    <span className="text-red-700 font-medium">Same day</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-700">Urgent Matters</span>
-                    <span className="text-red-700 font-medium">Within 4 hours</span>
-                  </div>
+                  {contactModel.additionalInfo.responseTime.times.map((time, index) => (
+                    <div key={index} className={`flex justify-between items-center py-2 ${index < contactModel.additionalInfo.responseTime.times.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                      <span className="text-gray-700">{time.label}</span>
+                      <span className="text-red-700 font-medium">{time.duration}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="flex items-center mb-6">
-                  <Calendar className="h-6 w-6 text-red-700 mr-3" />
-                  <h3 className="text-xl font-semibold text-gray-900">Schedule a Meeting</h3>
+                  {(() => {
+                    const IconComponent = contactModel.additionalInfo.scheduleMeeting.iconComponent;
+                    return <IconComponent className="h-6 w-6 text-red-700 mr-3" />;
+                  })()}
+                  <h3 className="text-xl font-semibold text-gray-900">{contactModel.additionalInfo.scheduleMeeting.title}</h3>
                 </div>
                 <p className="text-gray-600 mb-4">
-                  For in-person meetings, interviews, or formal consultations, please specify 
-                  your preferred dates and the nature of the discussion.
+                  {contactModel.additionalInfo.scheduleMeeting.description}
                 </p>
                 <div className="bg-red-50 p-4 rounded-lg">
                   <p className="text-red-800 text-sm">
-                    <strong>Note:</strong> Due to high demand, meeting requests are prioritized based on 
-                    urgency and alignment with current political initiatives and community needs.
+                    <strong>Note:</strong> {contactModel.additionalInfo.scheduleMeeting.note}
                   </p>
                 </div>
               </div>
