@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Star } from 'lucide-react';
 import { useAboutPageModel } from '../hooks/useAboutPageModel';
 import { useJourneyModel } from '../hooks/useJourneyModel';
-
+import Communist from '../assets/image (2).png';
 const AboutPage = () => {
   const { aboutModel, isLoading: isAboutLoading } = useAboutPageModel();
   const { journeyModel, fetchJourney, isLoading: isJourneyLoading } = useJourneyModel();
@@ -33,13 +33,17 @@ const AboutPage = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-              {aboutModel.hero.title}
-            </h1>
-            <p className="text-xl lg:text-2xl text-red-100 max-w-3xl mx-auto">
-              {aboutModel.hero.subtitle}
-            </p>
+          <div className="flex items-center justify-center gap-6">
+            <Star className="w-30 h-30 text-gray-300 fill-gray-300 hidden sm:block" />
+            <div className="text-center">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-2">
+                {aboutModel.hero.title}
+              </h1>
+              <p className="text-xl lg:text-2xl text-red-100 max-w-3xl">
+                {aboutModel.hero.subtitle}
+              </p>
+            </div>
+            <img src={Communist} alt="" className='size-30'/>
           </div>
         </div>
       </section>
