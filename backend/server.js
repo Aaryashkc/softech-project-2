@@ -16,6 +16,7 @@ import homeRoutes from './routes/home.route.js';
 import achievementRoutes from './routes/achievement.route.js';
 import journeyRoutes from './routes/journey.route.js';
 import aboutRoutes from './routes/about.route.js';
+import popupRoutes from './routes/popup.route.js';
 
 const port= process.env.PORT || 5001;
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/home', homeRoutes)
 app.use('/api/achievement', achievementRoutes)
 app.use('/api/journey', journeyRoutes)
 app.use('/api/about', aboutRoutes)
+app.use("/api/popup", popupRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
