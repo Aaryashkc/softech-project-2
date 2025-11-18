@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus, Home, Award, MapPin, Mail, User } from 'lucide-react';
+import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus, Home, Award, MapPin, Mail, User, PictureInPicture2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import EventManagement from './EventManagement';
@@ -16,9 +16,11 @@ import AddEventPage from '../components/AddEventPage';
 import AddGalleryPage from '../components/AddGalleryPage';
 import AddNewsPage from '../components/AddNewsPage';
 import AddInterviewPage from '../components/AddInterviewPage';
+import PopupManagement from './PopupManagement';
+import AddPopup from '../components/AddPopup';
 
 // Types
-type SectionType = 'events' | 'gallery' | 'news' | 'interviews' | 'home' | 'achievement' | 'journey' | 'contact' | 'about' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview';
+type SectionType = 'popup' | 'add-popup' | 'events' | 'gallery' | 'news' | 'interviews' | 'home' | 'achievement' | 'journey' | 'contact' | 'about' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview';
 
 interface SidebarProps {
   activeSection: SectionType;
@@ -53,6 +55,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'journey' as SectionType, label: 'Journey Page', icon: MapPin },
     { id: 'contact' as SectionType, label: 'Contact Page', icon: Mail },
     { id: 'about' as SectionType, label: 'About Page', icon: User },
+    { id: 'popup' as SectionType, label: 'Popup Management', icon: PictureInPicture2 },
+    { id: 'add-popup' as SectionType, label: 'Add Popup', icon: Plus },
     { id: 'events' as SectionType, label: 'Manage Events', icon: Calendar },
     { id: 'add-event' as SectionType, label: 'Add Event', icon: Plus },
     { id: 'gallery' as SectionType, label: 'Gallery Manager', icon: Image },
@@ -137,6 +141,10 @@ const AdminDashboard: React.FC = () => {
 
   const renderSection = () => {
     switch (activeSection) {
+      case 'popup':
+        return <PopupManagement />;
+      case 'add-popup':
+        return <AddPopup />;
       case 'home':
         return <HomeManagement />;
       case 'achievement':

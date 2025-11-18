@@ -25,6 +25,7 @@ import AddGalleryPage from "./admin/components/AddGalleryPage"
 import AddInterviewPage from "./admin/components/AddInterviewPage"
 import AddNewsPage from "./admin/components/AddNewsPage"
 import EditGalleryPage from "./admin/pages/EditGalleryPage"
+import PopupModal from "./components/PopupModel"
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -71,6 +72,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-white">
       {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
+        <PopupModal />
         <Routes>
           {/* public routes */}
           <Route path="/" element={<HomePage/>} />
