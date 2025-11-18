@@ -72,7 +72,8 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-white">
       {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
-        <PopupModal />
+        {!isAdminRoute && <PopupModal />}
+        
         <Routes>
           {/* public routes */}
           <Route path="/" element={<HomePage/>} />

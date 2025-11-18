@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGalleryStore } from '../../stores/useGalleryStore';
 import type { GalleryInput } from '../../stores/useGalleryStore';
-import { FileText, Image, Loader2, X, Upload } from 'lucide-react';
+import { FileText, Image, Loader2, X, Upload, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { axiosInstance } from '../../libs/axios';
 
@@ -16,7 +16,7 @@ const InputField = ({
   error
 }: {
   label: string;
-  name: keyof Omit<GalleryInput, 'images'>;
+  name: keyof Omit<GalleryInput, 'images' | 'category'>;
   icon: React.ElementType;
   placeholder: string;
   required?: boolean;
@@ -65,20 +65,22 @@ const AddGalleryPage: React.FC = () => {
   const [formData, setFormData] = useState<GalleryInput>({
     title: '',
     description: '',
-    images: []
+    images: [],
+    category: 'normal'
   });
 
   interface FormErrors {
     title?: string;
     description?: string;
     images?: string;
+    category?: string;
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -317,7 +319,8 @@ const AddGalleryPage: React.FC = () => {
       setFormData({
         title: '',
         description: '',
-        images: []
+        images: [],
+        category: 'normal'
       });
       setImageFiles([]);
       setErrors({});
@@ -336,7 +339,8 @@ const AddGalleryPage: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      images: []
+      images: [],
+      category: 'normal'
     });
     setImageFiles([]);
     setErrors({});
@@ -390,6 +394,33 @@ const AddGalleryPage: React.FC = () => {
                 <p className="text-sm text-red-600 flex items-center gap-1">
                   <span className="w-4 h-4">⚠️</span>
                   {errors.description}
+                </p>
+              )}
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FolderOpen className="w-4 h-4" />
+                Category
+                <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                  errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
+                required
+              >
+                <option value="normal">Normal Gallery</option>
+                <option value="साहित्य र संगित">साहित्य र संगित</option>
+              </select>
+              {errors.category && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <span className="w-4 h-4">⚠️</span>
+                  {errors.category}
                 </p>
               )}
             </div>

@@ -4,7 +4,7 @@ import Gallery from '../models/gallery.model.js';
 // Create gallery
 export const createGallery = async (req, res) => {
   try {
-    const { title, description, images } = req.body;
+    const { title, description, images, category } = req.body;
 
     if (!images || images.length === 0) {
       return res.status(400).json({ error: "At least one image is required" });
@@ -36,10 +36,13 @@ export const createGallery = async (req, res) => {
       );
     }
 
+    const normalizedCategory = (typeof category === 'string' && category.trim()) ? category : 'normal';
+
     const newGallery = new Gallery({
       title,
       description,
-      images: uploadedImages
+      images: uploadedImages,
+      category: normalizedCategory
     });
 
     const saved = await newGallery.save();
@@ -96,7 +99,7 @@ export const getGalleryById = async (req, res) => {
 // Update gallery
 export const updateGallery = async (req, res) => {
   try {
-    const { title, description, images } = req.body;
+    const { title, description, images, category } = req.body;
 
     const gallery = await Gallery.findById(req.params.id);
     if (!gallery) return res.status(404).json({ error: 'Gallery not found' });
@@ -126,6 +129,9 @@ export const updateGallery = async (req, res) => {
     gallery.title = title || gallery.title;
     gallery.description = description || gallery.description;
     gallery.images = uploadedImages;
+    if (category !== undefined) {
+      gallery.category = (typeof category === 'string' && category.trim()) ? category : 'normal';
+    }
 
     const updated = await gallery.save();
     res.status(200).json(updated);

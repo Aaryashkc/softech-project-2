@@ -28,7 +28,8 @@ const EditGalleryPage: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    images: [] as string[]
+    images: [] as string[],
+    category: 'normal'
   });
 
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
@@ -46,7 +47,8 @@ const EditGalleryPage: React.FC = () => {
           setFormData({
             title: gallery.title,
             description: gallery.description,
-            images: gallery.images.map(img => img.url) // Extract URLs from image objects
+            images: gallery.images.map(img => img.url), // Extract URLs from image objects
+            category: (gallery.category && gallery.category.trim()) ? gallery.category : 'normal'
           });
 
           // Convert existing image objects to ImageItem format
@@ -244,7 +246,8 @@ const EditGalleryPage: React.FC = () => {
       const submitData = {
         title: formData.title,
         description: formData.description,
-        images: imagesData
+        images: imagesData,
+        category: formData.category
       };
 
       await updateGallery(id, submitData);
@@ -309,6 +312,22 @@ const EditGalleryPage: React.FC = () => {
                 placeholder="Enter gallery title"
               />
               {errors.title && <p className="text-sm text-red-600">{errors.title}</p>}
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              >
+                <option value="normal">Normal Gallery</option>
+                <option value="साहित्य र संगित">साहित्य र संगित</option>
+              </select>
             </div>
 
             {/* Description */}

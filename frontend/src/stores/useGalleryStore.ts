@@ -11,6 +11,7 @@ export interface GalleryType {
     url: string;
     public_id: string;
   }>;
+  category?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,6 +21,7 @@ export type GalleryInput = {
   title: string;
   description: string;
   images: (string | { url: string; public_id: string })[];
+  category?: string;
 };
 
 // Error response type

@@ -5,6 +5,7 @@ import { useGalleryStore, type GalleryType } from '../stores/useGalleryStore';
 const Gallery: React.FC = () => {
   const [currentView, setCurrentView] = useState<'gallery' | 'collection'>('gallery');
   const [selectedCollection, setSelectedCollection] = useState<GalleryType | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'normal' | 'sahitya'>('all');
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   
   const { galleries, fetchGalleries, isLoading } = useGalleryStore();
@@ -207,72 +208,121 @@ const Gallery: React.FC = () => {
         </div>
       </section>
 
-      {/* Photo Collections */}
+      {/* Photo Collections with tabs (All, Gallery, साहित्य र संगित) */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
+          {/* Tabs */}
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-5 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
+                activeTab === 'all' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setActiveTab('normal')}
+              className={`px-5 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
+                activeTab === 'normal' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Gallery
+            </button>
+            <button
+              onClick={() => setActiveTab('sahitya')}
+              className={`px-5 py-2.5 rounded-lg font-bold transition-colors duration-200 ${
+                activeTab === 'sahitya' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              साहित्य र संगित
+            </button>
+          </div>
+
+          {/* Content */}
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="h-12 w-12 animate-spin text-red-600" />
             </div>
           ) : galleries.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleries.map((gallery) => (
-              <div 
-                key={gallery._id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
-                onClick={() => openCollection(gallery)}
-              >
-                {/* Thumbnail */}
-                <div className="relative flex-1">
-                  {isVideo(getImageUrl(gallery.images[0])) ? (
-                    <div className="relative">
-                      <video
-                        src={getImageUrl(gallery.images[0])}
-                        className="w-full h-64 object-cover"
-                        muted
-                        onError={(e) => {
-                          const target = e.target as HTMLVideoElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Play className="h-12 w-12 text-white opacity-80" />
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {activeTab === 'all' ? 'All Galleries' : activeTab === 'normal' ? 'Gallery' : 'साहित्य र संगित'}
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {galleries
+                  .filter(g => {
+                    if (activeTab === 'all') return true;
+                    if (activeTab === 'normal') return !g.category || !g.category.trim() || g.category === 'normal';
+                    return g.category && g.category.trim() && g.category === 'साहित्य र संगित';
+                  })
+                  .map((gallery) => (
+                    <div 
+                      key={gallery._id}
+                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
+                      onClick={() => openCollection(gallery)}
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative flex-1">
+                        {isVideo(getImageUrl(gallery.images[0])) ? (
+                          <div className="relative">
+                            <video
+                              src={getImageUrl(gallery.images[0])}
+                              className="w-full h-64 object-cover"
+                              muted
+                              onError={(e) => {
+                                const target = e.target as HTMLVideoElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Play className="h-12 w-12 text-white opacity-80" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img 
+                            src={getImageUrl(gallery.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                            alt={gallery.title}
+                            className="w-full h-64 object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                            }}
+                          />
+                        )}
+                        <div className="absolute bottom-4 right-4">
+                          <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
+                            {gallery.images.length} {gallery.images.length === 1 ? 'item' : 'items'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                          {gallery.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {gallery.description}
+                        </p>
+                        <div className="flex items-center text-gray-500 text-sm mt-auto">
+                          <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>{formatDate(gallery.createdAt)}</span>
+                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <img 
-                      src={getImageUrl(gallery.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                      alt={gallery.title}
-                      className="w-full h-64 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                      }}
-                    />
-                  )}
-                  <div className="absolute bottom-4 right-4">
-                    <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
-                      {gallery.images.length} {gallery.images.length === 1 ? 'item' : 'items'}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Content */}
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
-                    {gallery.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {gallery.description}
-                  </p>
-                  <div className="flex items-center text-gray-500 text-sm mt-auto">
-                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>{formatDate(gallery.createdAt)}</span>
-                  </div>
-                </div>
+                ))}
               </div>
-              ))}
-            </div>
+              {galleries.filter(g => {
+                if (activeTab === 'all') return galleries.length > 0; // won't show empty state for 'all' if there are galleries
+                if (activeTab === 'normal') return !(!g.category || !g.category.trim() || g.category === 'normal');
+                return !(g.category && g.category.trim() && g.category === 'साहित्य र संगित');
+              }).length === galleries.length && (
+                <div className="text-center py-8 text-gray-500">No galleries in this category.</div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16">
               <h3 className="text-xl font-medium text-gray-700 mb-2">No Galleries Found</h3>

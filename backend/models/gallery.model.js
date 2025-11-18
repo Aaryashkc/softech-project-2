@@ -13,6 +13,12 @@ const gallerySchema = new mongoose.Schema({
     trim: true
   },
 
+  category: {
+  type: String,
+  enum: ["normal", "साहित्य र संगित"],
+  default: "normal"
+ },
+
   images: [
     {
       url: { type: String, required: true },

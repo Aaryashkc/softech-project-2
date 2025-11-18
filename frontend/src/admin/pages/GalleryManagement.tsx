@@ -76,7 +76,8 @@ const GalleryManagement: React.FC = () => {
       await updateGallery(updatedGallery._id, {
         title: updatedGallery.title,
         description: updatedGallery.description,
-        images: imageUrls
+        images: imageUrls,
+        category: (updatedGallery.category && updatedGallery.category.trim()) ? updatedGallery.category : 'normal'
       });
       setShowEditModal(false);
       setSelectedGallery(null);
@@ -246,6 +247,11 @@ const GalleryManagement: React.FC = () => {
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
                 {gallery.title}
               </h3>
+              <div className="mb-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {(gallery.category && gallery.category.trim()) ? gallery.category : 'normal'}
+                </span>
+              </div>
               <div className="flex items-center text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3">
                 <Calendar size={16} className="mr-2" />
                 {formatDate(gallery.createdAt)}
@@ -376,6 +382,12 @@ const GalleryManagement: React.FC = () => {
                     <p>{formatDate(selectedGallery.createdAt)}</p>
                   </div>
                 </div>
+                <div className="flex items-center text-gray-700 mb-4">
+                  <div>
+                    <p className="font-medium">Category</p>
+                    <p>{(selectedGallery.category && selectedGallery.category.trim()) ? selectedGallery.category : 'normal'}</p>
+                  </div>
+                </div>
                 <div>
                   <p className="font-medium text-gray-700 mb-2">Description</p>
                   <p className="text-gray-600">
@@ -430,6 +442,24 @@ const GalleryManagement: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={(selectedGallery.category && selectedGallery.category.trim()) ? selectedGallery.category : 'normal'}
+                    onChange={(e) =>
+                      setSelectedGallery({
+                        ...selectedGallery,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="normal">Normal Gallery</option>
+                    <option value="साहित्य र संगित">साहित्य र संगित</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
