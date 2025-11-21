@@ -28,6 +28,8 @@ import AddNewsPage from "./admin/components/AddNewsPage"
 import EditGalleryPage from "./admin/pages/EditGalleryPage"
 import PopupModal from "./components/PopupModel"
 import Sahitya from "./pages/Sahitya"
+import SahityaManagement from "./admin/pages/SahityaManagement"
+import AddSahityaPage from "./admin/components/AddSahityaPage"
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -37,7 +39,7 @@ const App: React.FC = () => {
     checkAuth,
     isCheckingAuth
   } = useAuthStore();
-  
+
   const protectedRoutes = [
     "/admin",
     "/admin/login",
@@ -49,7 +51,10 @@ const App: React.FC = () => {
     "/admin/add-gallery",
     "/admin/add-interview",
     "/admin/add-news",
-    "/admin/gallery/edit"
+    "/admin/add-news",
+    "/admin/gallery/edit",
+    "/sahityamanagement",
+    "/admin/add-sahitya"
   ];
 
   // Helper to check if current path is protected
@@ -75,37 +80,39 @@ const App: React.FC = () => {
       {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
         {!isAdminRoute && <PopupModal />}
-        
+
         <Routes>
           {/* public routes */}
-          <Route path="/" element={<HomePage/>} />
-          <Route path="/about" element={<AboutPage/>} />
-          <Route path="/events" element={<EventsPage/>} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/vlogs" element={<Vlog />} />
           <Route path="/sahitya" element={<Sahitya />} />
           <Route path="/journey" element={<Journey />} />
-          <Route path="/achievements" element={<Achievement/>} />
+          <Route path="/achievements" element={<Achievement />} />
           <Route path="/contact" element={<Contact />} />
 
           {/* admin routes */}
-          <Route path="/admin" element={authUser? <AdminDashboard /> :<Navigate to="/admin/login" />} />
-          <Route path="/admin/login" element={!authUser?<AdminLogin />:<Navigate to="/admin" />}/>
-          <Route path="/eventmanagement" element={authUser?<EventManagement />:<Navigate to="/admin/login" />}/>
-          <Route path="/gallerymanagement" element={authUser?<GalleryManagement />:<Navigate to="/admin/login" />}/>
-          <Route path="/interviewmanagement" element={authUser?<InterviewManagement />:<Navigate to="/admin/login" />}/>
-          <Route path="/newsmanagement" element={authUser?<NewsManagement />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin" element={authUser ? <AdminDashboard /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/login" element={!authUser ? <AdminLogin /> : <Navigate to="/admin" />} />
+          <Route path="/eventmanagement" element={authUser ? <EventManagement /> : <Navigate to="/admin/login" />} />
+          <Route path="/gallerymanagement" element={authUser ? <GalleryManagement /> : <Navigate to="/admin/login" />} />
+          <Route path="/interviewmanagement" element={authUser ? <InterviewManagement /> : <Navigate to="/admin/login" />} />
+          <Route path="/newsmanagement" element={authUser ? <NewsManagement /> : <Navigate to="/admin/login" />} />
           {/* pages  */}
-          <Route path="/admin/add-event" element={authUser?<AddEventPage />:<Navigate to="/admin/login" />}/>
-          <Route path="/admin/add-gallery" element={authUser?<AddGalleryPage />:<Navigate to="/admin/login" />}/>
-          <Route path="/admin/add-interview" element={authUser?<AddInterviewPage />:<Navigate to="/admin/login" />}/>
-          <Route path="/admin/add-news" element={authUser?<AddNewsPage />:<Navigate to="/admin/login" />}/>
-          <Route path="/admin/gallery/edit/:id" element={authUser?<EditGalleryPage />:<Navigate to="/admin/login" />}/>
+          <Route path="/admin/add-event" element={authUser ? <AddEventPage /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/add-gallery" element={authUser ? <AddGalleryPage /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/add-interview" element={authUser ? <AddInterviewPage /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/add-news" element={authUser ? <AddNewsPage /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/gallery/edit/:id" element={authUser ? <EditGalleryPage /> : <Navigate to="/admin/login" />} />
+          <Route path="/sahityamanagement" element={authUser ? <SahityaManagement /> : <Navigate to="/admin/login" />} />
+          <Route path="/admin/add-sahitya" element={authUser ? <AddSahityaPage /> : <Navigate to="/admin/login" />} />
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
-      <Toaster/>
+      <Toaster />
     </div>
   )
 }

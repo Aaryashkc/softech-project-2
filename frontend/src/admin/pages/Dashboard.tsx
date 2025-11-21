@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus, Home, Award, MapPin, Mail, User, PictureInPicture2 } from 'lucide-react';
+import { Calendar, Image, Newspaper, Mic, Menu, X, LogOut, Plus, Home, Award, MapPin, Mail, User, PictureInPicture2, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import EventManagement from './EventManagement';
@@ -16,11 +16,13 @@ import AddEventPage from '../components/AddEventPage';
 import AddGalleryPage from '../components/AddGalleryPage';
 import AddNewsPage from '../components/AddNewsPage';
 import AddInterviewPage from '../components/AddInterviewPage';
+import SahityaManagement from './SahityaManagement';
+import AddSahityaPage from '../components/AddSahityaPage';
 import PopupManagement from './PopupManagement';
 import AddPopup from '../components/AddPopup';
 
 // Types
-type SectionType = 'popup' | 'add-popup' | 'events' | 'gallery' | 'news' | 'interviews' | 'home' | 'achievement' | 'journey' | 'contact' | 'about' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview';
+type SectionType = 'popup' | 'add-popup' | 'events' | 'gallery' | 'news' | 'interviews' | 'home' | 'achievement' | 'journey' | 'contact' | 'about' | 'add-event' | 'add-gallery' | 'add-news' | 'add-interview' | 'sahitya' | 'add-sahitya';
 
 interface SidebarProps {
   activeSection: SectionType;
@@ -30,11 +32,11 @@ interface SidebarProps {
 }
 
 // Sidebar Component
-const Sidebar: React.FC<SidebarProps> = ({ 
-  activeSection, 
-  onSectionChange, 
-  isCollapsed, 
-  onToggleCollapse 
+const Sidebar: React.FC<SidebarProps> = ({
+  activeSection,
+  onSectionChange,
+  isCollapsed,
+  onToggleCollapse
 }) => {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
@@ -61,6 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'add-event' as SectionType, label: 'Add Event', icon: Plus },
     { id: 'gallery' as SectionType, label: 'Gallery Manager', icon: Image },
     { id: 'add-gallery' as SectionType, label: 'Add Gallery', icon: Plus },
+    { id: 'sahitya' as SectionType, label: 'Sahitya Manager', icon: BookOpen },
+    { id: 'add-sahitya' as SectionType, label: 'Add Sahitya', icon: Plus },
     { id: 'news' as SectionType, label: 'News Management', icon: Newspaper },
     { id: 'add-news' as SectionType, label: 'Add News', icon: Plus },
     { id: 'interviews' as SectionType, label: 'Interviews', icon: Mic },
@@ -68,9 +72,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <div className={`bg-gray-900 text-white transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-64'
-    } min-h-screen flex flex-col relative`}>
+    <div className={`bg-gray-900 text-white transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'
+      } min-h-screen flex flex-col relative`}>
       <div className="flex-1 flex flex-col h-full">
         {/* Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
@@ -90,19 +93,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           <ul className="p-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              if (!Icon) return null;
               return (
                 <li key={item.id}>
                   <button
                     onClick={() => onSectionChange(item.id)}
-                    className={`flex items-center rounded-lg transition-colors ${
-                      isCollapsed
+                    className={`flex items-center rounded-lg transition-colors ${isCollapsed
                         ? 'w-10 h-10 p-0 justify-center mx-auto'
                         : 'w-full gap-3 p-3'
-                    } ${
-                      activeSection === item.id
+                      } ${activeSection === item.id
                         ? 'bg-blue-600 text-white'
                         : 'hover:bg-gray-800 text-gray-300'
-                    }`}
+                      }`}
                     title={isCollapsed ? item.label : ''}
                   >
                     <Icon size={isCollapsed ? 24 : 20} />
@@ -121,9 +123,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="sticky bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-gray-700">
         <button
           onClick={handleLogout}
-          className={`rounded-lg transition-colors text-red-400 hover:bg-red-900/20 flex items-center ${
-            isCollapsed ? 'w-10 h-10 p-0 justify-center mx-auto' : 'w-full gap-3 p-3'
-          }`}
+          className={`rounded-lg transition-colors text-red-400 hover:bg-red-900/20 flex items-center ${isCollapsed ? 'w-10 h-10 p-0 justify-center mx-auto' : 'w-full gap-3 p-3'
+            }`}
           title={isCollapsed ? 'Logout' : ''}
         >
           <LogOut size={isCollapsed ? 24 : 20} />
@@ -162,11 +163,15 @@ const AdminDashboard: React.FC = () => {
       case 'gallery':
         return <GalleryManagement />;
       case 'add-gallery':
-        return <AddGalleryPage   />;
+        return <AddGalleryPage />;
+      case 'sahitya':
+        return <SahityaManagement />;
+      case 'add-sahitya':
+        return <AddSahityaPage />;
       case 'news':
         return <NewsManagement />;
       case 'add-news':
-        return <AddNewsPage  />;
+        return <AddNewsPage />;
       case 'interviews':
         return <InterviewManagement />;
       case 'add-interview':
