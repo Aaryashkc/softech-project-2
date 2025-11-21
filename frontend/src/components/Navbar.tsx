@@ -28,15 +28,18 @@ const Navbar = () => {
     { name: 'Political Journey', href: '/about' },
     { name: 'Achievements', href: '/achievements' },
     { name: 'News & Interviews', href: '/news' },
+    { name: 'Events', href: '/events' },
     { 
-      href: '/events', 
-      name: 'Events', 
+      href: '/gallery', 
+      name: 'Gallery', 
       hasDropdown: true,
       dropdownItems: [
-        { href: '/events', label: 'Events' },
+        { href: '/gallery', label: 'Gallery' },
+        { href: '/vlogs', label: 'Vlogs' },
+        { href: '/sahitya', label: 'साहित्य र संगित' },
+
       ]
     },
-    { name: 'Gallery', href: '/gallery' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -57,7 +60,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             {navigation.map((item) => (
               <div key={item.name} className="relative">
                 {item.hasDropdown ? (

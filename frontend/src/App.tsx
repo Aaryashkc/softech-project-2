@@ -10,6 +10,7 @@ import Contact from "./pages/Contact"
 import EventsPage from "./pages/EventPage"
 import NewsPage from "./pages/NewsPage"
 import Gallery from "./pages/Gallery"
+import Vlog from "./pages/Vlog"
 import { Toaster } from "react-hot-toast"
 import AdminDashboard from "./admin/pages/Dashboard"
 import EventManagement from "./admin/pages/EventManagement"
@@ -26,6 +27,7 @@ import AddInterviewPage from "./admin/components/AddInterviewPage"
 import AddNewsPage from "./admin/components/AddNewsPage"
 import EditGalleryPage from "./admin/pages/EditGalleryPage"
 import PopupModal from "./components/PopupModel"
+import Sahitya from "./pages/Sahitya"
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -81,6 +83,8 @@ const App: React.FC = () => {
           <Route path="/events" element={<EventsPage/>} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/vlogs" element={<Vlog />} />
+          <Route path="/sahitya" element={<Sahitya />} />
           <Route path="/journey" element={<Journey />} />
           <Route path="/achievements" element={<Achievement/>} />
           <Route path="/contact" element={<Contact />} />

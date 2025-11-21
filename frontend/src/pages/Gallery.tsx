@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, Loader2, X, ChevronLeft, ChevronRight, Play} from 'lucide-react';
+import { ArrowLeft, Calendar, Loader2, X, ChevronLeft, ChevronRight, Play, Images } from 'lucide-react';
 import { useGalleryStore, type GalleryType } from '../stores/useGalleryStore';
+import { getYouTubeEmbedUrl } from '../utils/youtube';
 
 const Gallery: React.FC = () => {
   const [currentView, setCurrentView] = useState<'gallery' | 'collection'>('gallery');
   const [selectedCollection, setSelectedCollection] = useState<GalleryType | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'normal' | 'sahitya'>('all');
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   
   const { galleries, fetchGalleries, isLoading } = useGalleryStore();
@@ -18,7 +18,9 @@ const Gallery: React.FC = () => {
   // Keyboard navigation for fullscreen mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (fullscreenIndex === null || !selectedCollection) return;
+      if (fullscreenIndex === null || !selectedCollection || selectedCollection.youtubeUrl) return;
+      const media = selectedCollection.images[fullscreenIndex];
+      if (!media) return;
       
       switch (e.key) {
         case 'Escape':
@@ -34,7 +36,7 @@ const Gallery: React.FC = () => {
           break;
         case ' ':
           e.preventDefault();
-          if (isVideo(getImageUrl(selectedCollection.images[fullscreenIndex]))) {
+          if (isVideo(getImageUrl(media))) {
             // No custom play/pause logic here, rely on native controls
           }
           break;
@@ -91,6 +93,7 @@ const Gallery: React.FC = () => {
   const openCollection = (collection: GalleryType): void => {
     setSelectedCollection(collection);
     setCurrentView('collection');
+    setFullscreenIndex(null);
   };
 
   const backToGallery = (): void => {
@@ -100,6 +103,7 @@ const Gallery: React.FC = () => {
   };
 
   const openFullscreen = (index: number): void => {
+    if (selectedCollection?.youtubeUrl) return;
     setFullscreenIndex(index);
   };
 
@@ -108,10 +112,11 @@ const Gallery: React.FC = () => {
   };
 
   const navigateMedia = (direction: number): void => {
-    if (!selectedCollection || fullscreenIndex === null) return;
+    if (!selectedCollection || fullscreenIndex === null || selectedCollection.youtubeUrl) return;
     
     const newIndex = fullscreenIndex + direction;
-    if (newIndex >= 0 && newIndex < selectedCollection.images.length) {
+    const total = selectedCollection.images ? selectedCollection.images.length : 0;
+    if (newIndex >= 0 && newIndex < total) {
       setFullscreenIndex(newIndex);
     }
   };
@@ -120,7 +125,7 @@ const Gallery: React.FC = () => {
 
   // Fullscreen Modal Component
   const FullscreenModal: React.FC = () => {
-    if (fullscreenIndex === null || !selectedCollection) return null;
+    if (fullscreenIndex === null || !selectedCollection || selectedCollection.youtubeUrl) return null;
 
     const currentMedia = getImageUrl(selectedCollection.images[fullscreenIndex]);
     const isMediaVideo = isVideo(currentMedia);
@@ -200,7 +205,7 @@ const Gallery: React.FC = () => {
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">Photo Gallery</h1>
+            <h1 className="text-4xl font-bold mb-4">Media Gallery</h1>
             <p className="text-xl text-red-100">
               Capturing moments from our political journey
             </p>
@@ -208,36 +213,10 @@ const Gallery: React.FC = () => {
         </div>
       </section>
 
-      {/* Photo Collections with tabs (All, Gallery, साहित्य र संगित) */}
+      {/* Photo Collections with tabs (All, Gallery) */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          {/* Tabs */}
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-5 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                activeTab === 'all' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setActiveTab('normal')}
-              className={`px-5 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                activeTab === 'normal' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Gallery
-            </button>
-            <button
-              onClick={() => setActiveTab('sahitya')}
-              className={`px-5 py-2.5 rounded-lg font-bold transition-colors duration-200 ${
-                activeTab === 'sahitya' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              साहित्य र संगित
-            </button>
-          </div>
+          
 
           {/* Content */}
           {isLoading ? (
@@ -246,82 +225,95 @@ const Gallery: React.FC = () => {
             </div>
           ) : galleries.length > 0 ? (
             <>
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {activeTab === 'all' ? 'All Galleries' : activeTab === 'normal' ? 'Gallery' : 'साहित्य र संगित'}
-                </h2>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {galleries
-                  .filter(g => {
-                    if (activeTab === 'all') return true;
-                    if (activeTab === 'normal') return !g.category || !g.category.trim() || g.category === 'normal';
-                    return g.category && g.category.trim() && g.category === 'साहित्य र संगित';
-                  })
-                  .map((gallery) => (
-                    <div 
-                      key={gallery._id}
-                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
-                      onClick={() => openCollection(gallery)}
-                    >
-                      {/* Thumbnail */}
-                      <div className="relative flex-1">
-                        {isVideo(getImageUrl(gallery.images[0])) ? (
-                          <div className="relative">
-                            <video
-                              src={getImageUrl(gallery.images[0])}
+                  .map((gallery) => {
+                    const embedUrl = gallery.youtubeUrl ? getYouTubeEmbedUrl(gallery.youtubeUrl) : null;
+                    const imageCount = gallery.images ? gallery.images.length : 0;
+                    const hasImages = imageCount > 0;
+                    const firstMedia = hasImages ? getImageUrl(gallery.images[0]) : null;
+                    return (
+                      <div 
+                        key={gallery._id}
+                        className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer h-full flex flex-col"
+                        onClick={() => openCollection(gallery)}
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative flex-1">
+                          {embedUrl ? (
+                            <iframe
+                              src={embedUrl}
+                              title={gallery.title}
                               className="w-full h-64 object-cover"
-                              muted
-                              onError={(e) => {
-                                const target = e.target as HTMLVideoElement;
-                                target.style.display = 'none';
-                              }}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
                             />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Play className="h-12 w-12 text-white opacity-80" />
+                          ) : hasImages && firstMedia ? (
+                            isVideo(firstMedia) ? (
+                              <div className="relative">
+                                <video
+                                  src={firstMedia}
+                                  className="w-full h-64 object-cover"
+                                  muted
+                                  onError={(e) => {
+                                    const target = e.target as HTMLVideoElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Play className="h-12 w-12 text-white opacity-80" />
+                                </div>
+                              </div>
+                            ) : (
+                              <img 
+                                src={firstMedia}
+                                alt={gallery.title}
+                                className="w-full h-64 object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                                }}
+                              />
+                            )
+                          ) : (
+                            <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
+                              <Images className="h-12 w-12 text-gray-300" />
                             </div>
+                          )}
+                          <div className="absolute bottom-4 right-4">
+                            <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
+                              {embedUrl ? (
+                                <>
+                                  <Play className="h-4 w-4" />
+                                  Vlog
+                                </>
+                              ) : (
+                                <>
+                                  <Images className="h-4 w-4" />
+                                  {imageCount} {imageCount === 1 ? 'item' : 'items'}
+                                </>
+                              )}
+                            </span>
                           </div>
-                        ) : (
-                          <img 
-                            src={getImageUrl(gallery.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                            alt={gallery.title}
-                            className="w-full h-64 object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                            }}
-                          />
-                        )}
-                        <div className="absolute bottom-4 right-4">
-                          <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
-                            {gallery.images.length} {gallery.images.length === 1 ? 'item' : 'items'}
-                          </span>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                            {gallery.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                            {gallery.description}
+                          </p>
+                          <div className="flex items-center text-gray-500 text-sm mt-auto">
+                            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span>{formatDate(gallery.createdAt)}</span>
+                          </div>
                         </div>
                       </div>
-                      
-                      {/* Content */}
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
-                          {gallery.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                          {gallery.description}
-                        </p>
-                        <div className="flex items-center text-gray-500 text-sm mt-auto">
-                          <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{formatDate(gallery.createdAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                ))}
+                    );
+                  })}
               </div>
-              {galleries.filter(g => {
-                if (activeTab === 'all') return galleries.length > 0; // won't show empty state for 'all' if there are galleries
-                if (activeTab === 'normal') return !(!g.category || !g.category.trim() || g.category === 'normal');
-                return !(g.category && g.category.trim() && g.category === 'साहित्य र संगित');
-              }).length === galleries.length && (
-                <div className="text-center py-8 text-gray-500">No galleries in this category.</div>
-              )}
             </>
           ) : (
             <div className="text-center py-16">
@@ -337,6 +329,8 @@ const Gallery: React.FC = () => {
   // Collection View Component
   const CollectionView: React.FC = () => {
     if (!selectedCollection) return null;
+    const embedUrl = selectedCollection.youtubeUrl ? getYouTubeEmbedUrl(selectedCollection.youtubeUrl) : null;
+    const mediaItems = selectedCollection.images || [];
 
     return (
       <div>
@@ -364,47 +358,77 @@ const Gallery: React.FC = () => {
         {/* All Media */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedCollection.images.map((media, index) => (
-                <div 
-                  key={index} 
-                  className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => openFullscreen(index)}
-                >
-                  {isVideo(getImageUrl(media)) ? (
-                    <div className="relative">
-                      <video
-                        src={getImageUrl(media)}
+            {embedUrl ? (
+              <div className="space-y-6">
+                <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
+                  <iframe
+                    src={embedUrl}
+                    title={selectedCollection.title}
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <p className="text-center text-gray-600 text-sm">
+                  Watch on YouTube:
+                  <a href={selectedCollection.youtubeUrl || '#'} target="_blank" rel="noreferrer" className="text-red-600 hover:underline ml-1">
+                    {selectedCollection.youtubeUrl}
+                  </a>
+                </p>
+              </div>
+            ) : mediaItems.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {mediaItems.map((media, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => openFullscreen(index)}
+                  >
+                    {isVideo(getImageUrl(media)) ? (
+                      <div className="relative">
+                        <video
+                          src={getImageUrl(media)}
+                          className="w-full h-64 object-cover"
+                          muted
+                          onError={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="h-12 w-12 text-white opacity-80" />
+                        </div>
+                        <div className="absolute top-2 right-2">
+                          <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
+                            VIDEO
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <img 
+                        src={getImageUrl(media) || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                        alt={`${selectedCollection.title} - Photo ${index + 1}`}
                         className="w-full h-64 object-cover"
-                        muted
                         onError={(e) => {
-                          const target = e.target as HTMLVideoElement;
-                          target.style.display = 'none';
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Play className="h-12 w-12 text-white opacity-80" />
-                      </div>
-                      <div className="absolute top-2 right-2">
-                        <span className="bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
-                          VIDEO
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <img 
-                      src={getImageUrl(media) || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                      alt={`${selectedCollection.title} - Photo ${index + 1}`}
-                      className="w-full h-64 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : selectedCollection.youtubeUrl ? (
+              <div className="text-center py-16 text-gray-500">
+                <Play className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                Unable to load this vlog. Please verify the YouTube link.
+              </div>
+            ) : (
+              <div className="text-center py-16 text-gray-500">
+                <Images className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                No media available for this gallery.
+              </div>
+            )}
           </div>
         </section>
       </div>

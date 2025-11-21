@@ -15,7 +15,7 @@ const gallerySchema = new mongoose.Schema({
 
   category: {
   type: String,
-  enum: ["normal", "साहित्य र संगित"],
+  enum: ["normal", "vlog"],
   default: "normal"
  },
 
@@ -24,7 +24,12 @@ const gallerySchema = new mongoose.Schema({
       url: { type: String, required: true },
       public_id: { type: String, required: true }
     }
-  ]
+  ],
+
+  youtubeUrl: {
+    type: String,
+    trim: true
+  }
 }, {
   timestamps: true
 });

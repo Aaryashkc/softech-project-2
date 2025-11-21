@@ -12,6 +12,7 @@ export interface GalleryType {
     public_id: string;
   }>;
   category?: string;
+  youtubeUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,8 +21,9 @@ export interface GalleryType {
 export type GalleryInput = {
   title: string;
   description: string;
-  images: (string | { url: string; public_id: string })[];
+  images?: (string | { url: string; public_id: string })[];
   category?: string;
+  youtubeUrl?: string;
 };
 
 // Error response type
@@ -39,9 +41,11 @@ interface ErrorResponse extends Error {
 // Zustand store interface
 interface GalleryState {
   galleries: GalleryType[];
+  vlogGalleries: GalleryType[];
   isLoading: boolean;
   createGallery: (data: GalleryInput) => Promise<void>;
   fetchGalleries: () => Promise<void>;
+  fetchVlogGalleries: () => Promise<GalleryType[]>;
   fetchGalleryById: (id: string) => Promise<GalleryType | null>;
   updateGallery: (id: string, data: GalleryInput) => Promise<void>;
   deleteGallery: (id: string) => Promise<void>;
@@ -49,6 +53,7 @@ interface GalleryState {
 
 export const useGalleryStore = create<GalleryState>((set, get) => ({
   galleries: [],
+  vlogGalleries: [],
   isLoading: false,
 
   // Create
@@ -56,7 +61,12 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
     set({ isLoading: true });
     try {
       const response = await axiosInstance.post("/gallery/create", data);
-      set({ galleries: [response.data, ...get().galleries] });
+      set(state => ({
+        galleries: [response.data, ...state.galleries],
+        vlogGalleries: response.data.category === 'vlog'
+          ? [response.data, ...state.vlogGalleries]
+          : state.vlogGalleries
+      }));
       toast.success("Gallery created successfully");
     } catch (error) {
       const err = error as ErrorResponse;
@@ -82,6 +92,22 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
     }
   },
 
+  fetchVlogGalleries: async () => {
+    set({ isLoading: true });
+    try {
+      const response = await axiosInstance.get("/gallery/all", {
+        params: { category: 'vlog' }
+      });
+      set({ vlogGalleries: response.data });
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to fetch vlogs");
+      return [];
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   // Read one
   fetchGalleryById: async (id: string) => {
     try {
@@ -100,6 +126,12 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
       const response = await axiosInstance.put(`/gallery/${id}`, data);
       set({
         galleries: get().galleries.map((g) => (g._id === id ? response.data : g)),
+        vlogGalleries: response.data.category === 'vlog'
+          ? [
+              response.data,
+              ...get().vlogGalleries.filter((g) => g._id !== id)
+            ]
+          : get().vlogGalleries.filter((g) => g._id !== id),
       });
       toast.success("Gallery updated successfully");
     } catch (error) {
@@ -115,7 +147,10 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await axiosInstance.delete(`/gallery/${id}`);
-      set({ galleries: get().galleries.filter((g) => g._id !== id) });
+      set({
+        galleries: get().galleries.filter((g) => g._id !== id),
+        vlogGalleries: get().vlogGalleries.filter((g) => g._id !== id)
+      });
       toast.success("Gallery deleted successfully");
     } catch (error) {
       toast.error("Failed to delete gallery");

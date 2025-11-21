@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGalleryStore } from '../../stores/useGalleryStore';
-import { Loader2, ArrowLeft, Upload, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Youtube } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { extractYouTubeVideoId } from '../../utils/youtube';
 
 interface ExistingImage {
   url: string;
@@ -29,7 +30,8 @@ const EditGalleryPage: React.FC = () => {
     title: '',
     description: '',
     images: [] as string[],
-    category: 'normal'
+    category: 'normal',
+    youtubeUrl: ''
   });
 
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
@@ -37,6 +39,7 @@ const EditGalleryPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const isVlog = formData.category === 'vlog';
 
   useEffect(() => {
     const loadGallery = async () => {
@@ -44,15 +47,17 @@ const EditGalleryPage: React.FC = () => {
       try {
         const gallery = await fetchGalleryById(id);
         if (gallery) {
+          const galleryImages = gallery.images || [];
           setFormData({
             title: gallery.title,
             description: gallery.description,
-            images: gallery.images.map(img => img.url), // Extract URLs from image objects
-            category: (gallery.category && gallery.category.trim()) ? gallery.category : 'normal'
+            images: galleryImages.map(img => img.url), // Extract URLs from image objects
+            category: (gallery.category && gallery.category.trim()) ? gallery.category : 'normal',
+            youtubeUrl: gallery.youtubeUrl || ''
           });
 
           // Convert existing image objects to ImageItem format
-          const existingImages: ExistingImage[] = gallery.images.map(img => ({
+          const existingImages: ExistingImage[] = galleryImages.map(img => ({
             url: img.url,
             type: 'existing'
           }));
@@ -134,6 +139,7 @@ const EditGalleryPage: React.FC = () => {
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isVlog) return;
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -165,6 +171,7 @@ const EditGalleryPage: React.FC = () => {
   };
 
   const handleDrop = async (e: React.DragEvent) => {
+    if (isVlog) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -211,7 +218,13 @@ const EditGalleryPage: React.FC = () => {
       newErrors.title = 'Title is required';
     }
     
-    if (imageItems.length === 0) {
+    if (isVlog) {
+      if (!formData.youtubeUrl || !formData.youtubeUrl.trim()) {
+        newErrors.youtubeUrl = 'YouTube URL is required for vlogs';
+      } else if (!extractYouTubeVideoId(formData.youtubeUrl)) {
+        newErrors.youtubeUrl = 'Please enter a valid YouTube URL';
+      }
+    } else if (imageItems.length === 0) {
       newErrors.images = 'At least one image is required';
     }
     
@@ -232,25 +245,33 @@ const EditGalleryPage: React.FC = () => {
     setIsUpdating(true);
 
     try {
-      // Prepare images array - mix of existing URLs and new base64 data
-      const imagesData: string[] = [];
-      
-      for (const item of imageItems) {
-        if (item.type === 'existing') {
-          imagesData.push(item.url);
-        } else {
-          imagesData.push(item.base64!);
+      if (isVlog) {
+        await updateGallery(id, {
+          title: formData.title,
+          description: formData.description,
+          images: [],
+          category: formData.category,
+          youtubeUrl: formData.youtubeUrl?.trim()
+        });
+      } else {
+        // Prepare images array - mix of existing URLs and new base64 data
+        const imagesData: string[] = [];
+        
+        for (const item of imageItems) {
+          if (item.type === 'existing') {
+            imagesData.push(item.url);
+          } else {
+            imagesData.push(item.base64!);
+          }
         }
+
+        await updateGallery(id, {
+          title: formData.title,
+          description: formData.description,
+          images: imagesData,
+          category: formData.category
+        });
       }
-
-      const submitData = {
-        title: formData.title,
-        description: formData.description,
-        images: imagesData,
-        category: formData.category
-      };
-
-      await updateGallery(id, submitData);
       
       // Clean up object URLs
       imageItems.forEach(item => {
@@ -322,13 +343,56 @@ const EditGalleryPage: React.FC = () => {
               <select
                 id="category"
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => {
+                  const nextCategory = e.target.value;
+                  if (nextCategory === 'vlog' && imageItems.length > 0) {
+                    imageItems.forEach(item => {
+                      if (item.type === 'new') {
+                        URL.revokeObjectURL(item.preview);
+                      }
+                    });
+                    setImageItems([]);
+                  }
+                  setFormData(prev => ({
+                    ...prev,
+                    category: nextCategory,
+                    youtubeUrl: nextCategory === 'vlog' ? prev.youtubeUrl : '',
+                    images: nextCategory === 'vlog' ? [] : prev.images
+                  }));
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
                 <option value="normal">Normal Gallery</option>
-                <option value="साहित्य र संगित">साहित्य र संगित</option>
+                <option value="vlog">Vlog</option>
               </select>
             </div>
+
+            {isVlog && (
+              <div className="space-y-2">
+                <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-700">
+                  YouTube URL *
+                </label>
+                <div className="flex items-center gap-2">
+                  <Youtube className="w-4 h-4 text-red-600" />
+                  <input
+                    type="url"
+                    id="youtubeUrl"
+                    value={formData.youtubeUrl || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, youtubeUrl: e.target.value }));
+                      setErrors(prev => ({ ...prev, youtubeUrl: '' }));
+                    }}
+                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      errors.youtubeUrl ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+                {errors.youtubeUrl && (
+                  <p className="text-sm text-red-600">{errors.youtubeUrl}</p>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-2">
@@ -346,52 +410,58 @@ const EditGalleryPage: React.FC = () => {
             </div>
 
             {/* Image Upload Section */}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Images *
-              </label>
-
-              {/* File Upload Area */}
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              >
-                <input
-                  type="file"
-                  id="images-upload"
-                  multiple
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={isProcessing}
-                />
-                <label htmlFor="images-upload" className="cursor-pointer">
-                  {isProcessing ? (
-                    <div className="flex flex-col items-center">
-                      <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
-                      <p className="text-gray-600 mb-2">Processing images...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-2">Click to add more images or drag and drop</p>
-                      <p className="text-sm text-gray-500">PNG, JPG, WebP up to 5MB each</p>
-                    </>
-                  )}
+            {!isVlog ? (
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Images *
                 </label>
-              </div>
 
-              {errors.images && (
-                <p className="text-sm text-red-600 flex items-center gap-1">
-                  <span className="w-4 h-4">⚠️</span>
-                  {errors.images}
-                </p>
-              )}
-            </div>
+                {/* File Upload Area */}
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    id="images-upload"
+                    multiple
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={isProcessing}
+                  />
+                  <label htmlFor="images-upload" className="cursor-pointer">
+                    {isProcessing ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                        <p className="text-gray-600 mb-2">Processing images...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-2">Click to add more images or drag and drop</p>
+                        <p className="text-sm text-gray-500">PNG, JPG, WebP up to 5MB each</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {errors.images && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <span className="w-4 h-4">⚠️</span>
+                    {errors.images}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-blue-50 text-blue-700 text-sm">
+                Vlogs use a YouTube URL instead of gallery images. Image uploads are disabled for this category.
+              </div>
+            )}
 
             {/* Image Preview Grid */}
-            {imageItems.length > 0 && (
+            {!isVlog && imageItems.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-700">
@@ -486,7 +556,7 @@ const EditGalleryPage: React.FC = () => {
               </button>
               <button
                 type="submit"
-                disabled={isUpdating || isProcessing || imageItems.length === 0}
+                disabled={isUpdating || isProcessing || (!isVlog && imageItems.length === 0)}
                 className="w-full sm:flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isUpdating ? (

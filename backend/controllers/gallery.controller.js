@@ -1,48 +1,112 @@
 import cloudinary from '../lib/cloudinary.js';
 import Gallery from '../models/gallery.model.js';
 
+const extractYouTubeVideoId = (input) => {
+  if (!input || typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // Allow passing just the 11 character video id
+  const directIdMatch = trimmed.match(/^[a-zA-Z0-9_-]{11}$/);
+  if (directIdMatch) {
+    return directIdMatch[0];
+  }
+
+  let urlToParse = trimmed;
+  if (!/^https?:\/\//i.test(urlToParse)) {
+    urlToParse = `https://${urlToParse}`;
+  }
+
+  try {
+    const url = new URL(urlToParse);
+    const host = url.hostname.replace('www.', '');
+
+    if (!['youtube.com', 'youtu.be', 'm.youtube.com'].includes(host)) {
+      return null;
+    }
+
+    if (host === 'youtu.be') {
+      const pathId = url.pathname.replace('/', '').split('/')[0];
+      return pathId || null;
+    }
+
+    if (url.searchParams.has('v')) {
+      return url.searchParams.get('v');
+    }
+
+    const pathPatterns = [/^\/embed\/([^/?]+)/, /^\/shorts\/([^/?]+)/, /^\/live\/([^/?]+)/];
+    for (const pattern of pathPatterns) {
+      const match = url.pathname.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const normalizeYouTubeUrl = (input) => {
+  const videoId = extractYouTubeVideoId(input);
+  if (!videoId) return null;
+  return {
+    id: videoId,
+    url: `https://www.youtube.com/watch?v=${videoId}`
+  };
+};
+
 // Create gallery
 export const createGallery = async (req, res) => {
   try {
-    const { title, description, images, category } = req.body;
-
-    if (!images || images.length === 0) {
-      return res.status(400).json({ error: "At least one image is required" });
-    }
-
-    // If payload already contains uploaded objects, save directly
-    const first = images[0];
-    let uploadedImages;
-    if (typeof first === 'object' && first?.url && first?.public_id) {
-      uploadedImages = images;
-    } else {
-      // Upload each image/video to Cloudinary
-      uploadedImages = await Promise.all(
-        images.map(async (img, index) => {
-          try {
-            const uploadRes = await cloudinary.uploader.upload(img, {
-              folder: "gallery",
-              resource_type: "auto"
-            });
-            return {
-              url: uploadRes.secure_url,
-              public_id: uploadRes.public_id
-            };
-          } catch (uploadError) {
-            console.error(`Error uploading file ${index + 1}:`, uploadError);
-            throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
-          }
-        })
-      );
-    }
+    const { title, description, images, category, youtubeUrl } = req.body;
 
     const normalizedCategory = (typeof category === 'string' && category.trim()) ? category : 'normal';
+    let uploadedImages = [];
+    let normalizedYoutubeUrl;
+
+    if (normalizedCategory === 'vlog') {
+      const normalized = normalizeYouTubeUrl(youtubeUrl);
+      if (!normalized) {
+        return res.status(400).json({ error: "A valid YouTube URL is required for vlog entries" });
+      }
+      normalizedYoutubeUrl = normalized.url;
+    } else {
+      if (!images || images.length === 0) {
+        return res.status(400).json({ error: "At least one image is required" });
+      }
+
+      const first = images[0];
+      if (typeof first === 'object' && first?.url && first?.public_id) {
+        uploadedImages = images;
+      } else {
+        uploadedImages = await Promise.all(
+          images.map(async (img, index) => {
+            try {
+              const uploadRes = await cloudinary.uploader.upload(img, {
+                folder: "gallery",
+                resource_type: "auto"
+              });
+              return {
+                url: uploadRes.secure_url,
+                public_id: uploadRes.public_id
+              };
+            } catch (uploadError) {
+              console.error(`Error uploading file ${index + 1}:`, uploadError);
+              throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
+            }
+          })
+        );
+      }
+    }
 
     const newGallery = new Gallery({
       title,
       description,
       images: uploadedImages,
-      category: normalizedCategory
+      category: normalizedCategory,
+      youtubeUrl: normalizedCategory === 'vlog' ? normalizedYoutubeUrl : undefined
     });
 
     const saved = await newGallery.save();
@@ -78,7 +142,12 @@ export const uploadSingleMedia = async (req, res) => {
 // Get all galleries
 export const getAllGalleries = async (req, res) => {
   try {
-    const galleries = await Gallery.find().sort({ createdAt: -1 });
+    const { category } = req.query;
+    const filter = {};
+    if (typeof category === 'string' && category.trim()) {
+      filter.category = category.trim();
+    }
+    const galleries = await Gallery.find(filter).sort({ createdAt: -1 });
     res.status(200).json(galleries);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -99,44 +168,75 @@ export const getGalleryById = async (req, res) => {
 // Update gallery
 export const updateGallery = async (req, res) => {
   try {
-    const { title, description, images, category } = req.body;
+    const { title, description, images, category, youtubeUrl } = req.body;
 
     const gallery = await Gallery.findById(req.params.id);
     if (!gallery) return res.status(404).json({ error: 'Gallery not found' });
 
-    // Upload new images/videos if provided
-    let uploadedImages = gallery.images;
-    if (images && images.length > 0) {
-      uploadedImages = await Promise.all(
-        images.map(async (img, index) => {
-          try {
-            const uploadRes = await cloudinary.uploader.upload(img, {
-              folder: "gallery",
-              resource_type: "auto" // Automatically detect if it's an image or video
-            });
-            return {
-              url: uploadRes.secure_url,
-              public_id: uploadRes.public_id
-            };
-          } catch (uploadError) {
-            console.error(`Error uploading file ${index + 1}:`, uploadError);
-            throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
-          }
-        })
-      );
+    const incomingCategory = (typeof category === 'string' && category.trim()) ? category.trim() : undefined;
+    const nextCategory = incomingCategory || gallery.category || 'normal';
+
+    if (nextCategory === 'vlog') {
+      const normalized = normalizeYouTubeUrl(youtubeUrl || gallery.youtubeUrl);
+      if (!normalized) {
+        return res.status(400).json({ error: "A valid YouTube URL is required for vlog entries" });
+      }
+
+      if (gallery.images?.length) {
+        await Promise.all(
+          gallery.images.map(async (img) => {
+            try {
+              return await cloudinary.uploader.destroy(img.public_id);
+            } catch (destroyError) {
+              console.error(`Failed to delete Cloudinary asset ${img.public_id}:`, destroyError);
+              return null;
+            }
+          })
+        );
+      }
+
+      gallery.images = [];
+      gallery.youtubeUrl = normalized.url;
+    } else {
+      let updatedImages = gallery.images;
+      if (Array.isArray(images) && images.length > 0) {
+        updatedImages = await Promise.all(
+          images.map(async (img, index) => {
+            if (typeof img === 'object' && img?.url && img?.public_id) {
+              return img;
+            }
+            try {
+              const uploadRes = await cloudinary.uploader.upload(img, {
+                folder: "gallery",
+                resource_type: "auto"
+              });
+              return {
+                url: uploadRes.secure_url,
+                public_id: uploadRes.public_id
+              };
+            } catch (uploadError) {
+              console.error(`Error uploading file ${index + 1}:`, uploadError);
+              throw new Error(`Failed to upload file ${index + 1}: ${uploadError.message || 'Unknown error'}`);
+            }
+          })
+        );
+      } else if ((!gallery.images || gallery.images.length === 0) && gallery.category === 'vlog') {
+        return res.status(400).json({ error: "At least one image is required when converting a vlog into a gallery" });
+      }
+
+      gallery.images = updatedImages;
+      gallery.youtubeUrl = undefined;
     }
 
     gallery.title = title || gallery.title;
     gallery.description = description || gallery.description;
-    gallery.images = uploadedImages;
-    if (category !== undefined) {
-      gallery.category = (typeof category === 'string' && category.trim()) ? category : 'normal';
-    }
+    gallery.category = nextCategory;
 
     const updated = await gallery.save();
     res.status(200).json(updated);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error updating gallery:', err);
+    res.status(400).json({ error: err.message || 'Failed to update gallery' });
   }
 };
 

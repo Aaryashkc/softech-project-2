@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Images, Calendar, FileText, Plus, Loader2, X, Eye } from 'lucide-react';
+import { Edit, Trash2, Images, Calendar, FileText, Plus, Loader2, X, Eye, Play } from 'lucide-react';
 import { useGalleryStore, type GalleryType } from '../../stores/useGalleryStore';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { getYouTubeEmbedUrl } from '../../utils/youtube';
 
 interface GalleryWithId extends Omit<GalleryType, '_id'> {
   _id: string;
@@ -26,6 +27,8 @@ const GalleryManagement: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const selectedGalleryEmbedUrl = selectedGallery?.youtubeUrl ? getYouTubeEmbedUrl(selectedGallery.youtubeUrl) : null;
+  const isSelectedGalleryVlog = selectedGallery ? ((selectedGallery.category && selectedGallery.category.trim()) === 'vlog') : false;
 
   useEffect(() => {
     const loadGalleries = async () => {
@@ -71,14 +74,42 @@ const GalleryManagement: React.FC = () => {
   const handleSaveEdit = async (updatedGallery: GalleryWithId) => {
     try {
       setIsEditing(true);
-      // Extract URLs from image objects for the update
-      const imageUrls = updatedGallery.images.map(img => getImageUrl(img));
-      await updateGallery(updatedGallery._id, {
-        title: updatedGallery.title,
-        description: updatedGallery.description,
-        images: imageUrls,
-        category: (updatedGallery.category && updatedGallery.category.trim()) ? updatedGallery.category : 'normal'
-      });
+      const normalizedCategory = (updatedGallery.category && updatedGallery.category.trim()) ? updatedGallery.category : 'normal';
+
+      if (normalizedCategory === 'vlog') {
+        const trimmedUrl = updatedGallery.youtubeUrl?.trim();
+        if (!trimmedUrl || !getYouTubeEmbedUrl(trimmedUrl)) {
+          toast.error('Please provide a valid YouTube URL for vlog entries.');
+          return;
+        }
+
+        await updateGallery(updatedGallery._id, {
+          title: updatedGallery.title,
+          description: updatedGallery.description,
+          category: 'vlog',
+          youtubeUrl: trimmedUrl,
+          images: []
+        });
+      } else {
+        // Extract URLs from image objects for the update
+        const imageUrls = updatedGallery.images
+          .map(img => getImageUrl(img).trim())
+          .filter(Boolean);
+
+        if (imageUrls.length === 0) {
+          toast.error('Please include at least one image for gallery entries.');
+          return;
+        }
+
+        await updateGallery(updatedGallery._id, {
+          title: updatedGallery.title,
+          description: updatedGallery.description,
+          images: imageUrls,
+          category: normalizedCategory,
+          youtubeUrl: undefined
+        });
+      }
+
       setShowEditModal(false);
       setSelectedGallery(null);
       toast.success('Gallery updated successfully');
@@ -102,7 +133,7 @@ const GalleryManagement: React.FC = () => {
 
   // Handle adding a new image
   const handleAddImage = () => {
-    if (currentImageUrl.trim() && selectedGallery) {
+    if (currentImageUrl.trim() && selectedGallery && (selectedGallery.category || 'normal') !== 'vlog') {
       const newImage = {
         url: currentImageUrl.trim(),
         public_id: `temp_${Date.now()}` // Temporary ID for new images
@@ -118,7 +149,7 @@ const GalleryManagement: React.FC = () => {
 
   // Handle removing an image
   const handleRemoveImage = (index: number) => {
-    if (selectedGallery) {
+    if (selectedGallery && (selectedGallery.category || 'normal') !== 'vlog') {
       const updatedGallery = {
         ...selectedGallery,
         images: selectedGallery.images.filter((_, i) => i !== index)
@@ -147,101 +178,139 @@ const GalleryManagement: React.FC = () => {
 
       {/* Collections Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {galleries.map((gallery) => (
-          <div key={gallery._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-            {/* Photo Preview Grid */}
-            <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden relative">
-              {gallery.images.length > 0 ? (
-                <div className="grid grid-cols-2 h-full gap-1">
-                  {/* Main photo/video takes left half */}
-                  <div className="relative">
-                    {isVideo(getImageUrl(gallery.images[0])) ? (
-                      <video
-                        src={getImageUrl(gallery.images[0])}
-                        controls
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src={getImageUrl(gallery.images[0])}
-                        alt={gallery.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                        }}
-                      />
-                    )}
-                  </div>
-                  {/* Right side shows up to 3 more photos/videos in a grid */}
-                  <div className="grid grid-rows-2 gap-1">
-                    {gallery.images.slice(1, 3).map((media, index) => (
-                      <div key={index} className="relative">
-                        {isVideo(getImageUrl(media)) ? (
-                          <video
-                            src={getImageUrl(media)}
-                            controls
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={getImageUrl(media)}
-                            alt={`${gallery.title} ${index + 2}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                            }}
-                          />
-                        )}
-                      </div>
-                    ))}
-                    {/* Show count overlay if more than 4 photos/videos */}
-                    {gallery.images.length > 4 && (
-                      <div className="relative">
-                        {isVideo(getImageUrl(gallery.images[3])) ? (
-                          <video
-                            src={getImageUrl(gallery.images[3])}
-                            controls
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={getImageUrl(gallery.images[3])}
-                            alt={`${gallery.title} 4`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
-                            }}
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">
-                            +{gallery.images.length - 4}
-                          </span>
+        {galleries.map((gallery) => {
+          const embedUrl = gallery.youtubeUrl ? getYouTubeEmbedUrl(gallery.youtubeUrl) : null;
+          return (
+            <div key={gallery._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+              {/* Photo Preview Grid */}
+              <div className="h-40 sm:h-48 bg-gray-200 overflow-hidden relative">
+                {embedUrl ? (
+                  <iframe
+                    src={embedUrl}
+                    title={gallery.title}
+                    className="w-full h-full object-cover"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : gallery.images.length > 0 ? (
+                  <div className="grid grid-cols-2 h-full gap-1">
+                    {/* Main photo/video takes left half */}
+                    <div className="relative">
+                      {isVideo(getImageUrl(gallery.images[0])) ? (
+                        <video
+                          src={getImageUrl(gallery.images[0])}
+                          controls
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={getImageUrl(gallery.images[0])}
+                          alt={gallery.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                          }}
+                        />
+                      )}
+                    </div>
+                    {/* Right side shows up to 3 more photos/videos in a grid */}
+                    <div className="grid grid-rows-2 gap-1">
+                      {gallery.images.slice(1, 3).map((media, index) => (
+                        <div key={index} className="relative">
+                          {isVideo(getImageUrl(media)) ? (
+                            <video
+                              src={getImageUrl(media)}
+                              controls
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={getImageUrl(media)}
+                              alt={`${gallery.title} ${index + 2}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                              }}
+                            />
+                          )}
                         </div>
-                      </div>
-                    )}
+                      ))}
+                      {/* Show count overlay if more than 4 photos/videos */}
+                      {gallery.images.length > 4 && (
+                        <div className="relative">
+                          {isVideo(getImageUrl(gallery.images[3])) ? (
+                            <video
+                              src={getImageUrl(gallery.images[3])}
+                              controls
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/300x200?text=Video+Not+Found';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={getImageUrl(gallery.images[3])}
+                              alt={`${gallery.title} 4`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                              }}
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">
+                              +{gallery.images.length - 4}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <Images size={48} className="text-gray-300" />
+                  </div>
+                )}
+                {/* Photo count badge */}
+                <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
+                  {embedUrl ? (
+                    <>
+                      <Play size={14} />
+                      Vlog
+                    </>
+                  ) : (
+                    <>
+                      <Images size={14} />
+                      {gallery.images.length}
+                    </>
+                  )}
                 </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <Images size={48} className="text-gray-300" />
+              </div>
+              {isSelectedGalleryVlog && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={selectedGallery.youtubeUrl || ''}
+                    onChange={(e) =>
+                      setSelectedGallery({
+                        ...selectedGallery,
+                        youtubeUrl: e.target.value
+                      })
+                    }
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               )}
-              {/* Photo count badge */}
-              <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm flex items-center gap-1">
-                <Images size={14} />
-                {gallery.images.length}
-              </div>
-            </div>
             {/* Collection Content */}
             <div className="p-3 sm:p-4 flex flex-col flex-1">
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
@@ -296,8 +365,9 @@ const GalleryManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
       {galleries.length === 0 && !isLoading && (
@@ -334,41 +404,55 @@ const GalleryManagement: React.FC = () => {
               <div className="mb-6">
                 <div className="mb-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-3">
-                    Gallery Images ({selectedGallery.images.length})
+                    Gallery Media
                   </h3>
                   <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {selectedGallery.images.map((media, index) => (
-                        <div key={index} className="relative group">
-                          {isVideo(getImageUrl(media)) ? (
-                            <video
-                              src={getImageUrl(media)}
-                              controls
-                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
-                              onError={(e) => {
-                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
-                              }}
-                            />
-                          ) : (
-                            <img
-                              src={getImageUrl(media)}
-                              alt={`${selectedGallery.title} ${index + 1}`}
-                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
-                              }}
-                            />
-                          )}
-                          <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
-                            #{index + 1}
-                          </div>
+                    {selectedGalleryEmbedUrl ? (
+                      <div className="space-y-3">
+                        <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden bg-black">
+                          <iframe
+                            src={selectedGalleryEmbedUrl}
+                            title={selectedGallery.title}
+                            className="absolute inset-0 w-full h-full rounded-lg"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
                         </div>
-                      ))}
-                    </div>
-                    {selectedGallery.images.length === 0 && (
+                        <p className="text-xs text-gray-500 break-all">{selectedGallery.youtubeUrl}</p>
+                      </div>
+                    ) : selectedGallery.images.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {selectedGallery.images.map((media, index) => (
+                          <div key={index} className="relative group">
+                            {isVideo(getImageUrl(media)) ? (
+                              <video
+                                src={getImageUrl(media)}
+                                controls
+                                className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                                onError={(e) => {
+                                  (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
+                                }}
+                              />
+                            ) : (
+                              <img
+                                src={getImageUrl(media)}
+                                alt={`${selectedGallery.title} ${index + 1}`}
+                                className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
+                                }}
+                              />
+                            )}
+                            <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                              #{index + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
                       <div className="text-center py-8 text-gray-500">
                         <Images size={48} className="mx-auto mb-2 text-gray-300" />
-                        <p>No images in this gallery</p>
+                        <p>No media in this gallery</p>
                       </div>
                     )}
                   </div>
@@ -388,6 +472,19 @@ const GalleryManagement: React.FC = () => {
                     <p>{(selectedGallery.category && selectedGallery.category.trim()) ? selectedGallery.category : 'normal'}</p>
                   </div>
                 </div>
+                {selectedGalleryEmbedUrl && (
+                  <div className="mb-4">
+                    <p className="font-medium text-gray-700 mb-1">YouTube Link</p>
+                    <a
+                      href={selectedGallery.youtubeUrl || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline break-all text-sm"
+                    >
+                      {selectedGallery.youtubeUrl}
+                    </a>
+                  </div>
+                )}
                 <div>
                   <p className="font-medium text-gray-700 mb-2">Description</p>
                   <p className="text-gray-600">
@@ -449,16 +546,21 @@ const GalleryManagement: React.FC = () => {
                   </label>
                   <select
                     value={(selectedGallery.category && selectedGallery.category.trim()) ? selectedGallery.category : 'normal'}
-                    onChange={(e) =>
-                      setSelectedGallery({
-                        ...selectedGallery,
-                        category: e.target.value,
-                      })
+                  onChange={(e) => {
+                    const nextCategory = e.target.value;
+                    setSelectedGallery({
+                      ...selectedGallery,
+                      category: nextCategory,
+                      images: nextCategory === 'vlog' ? [] : selectedGallery.images
+                    });
+                    if (nextCategory === 'vlog') {
+                      setCurrentImageUrl('');
                     }
+                  }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="normal">Normal Gallery</option>
-                    <option value="साहित्य र संगित">साहित्य र संगित</option>
+                  <option value="vlog">Vlog</option>
                   </select>
                 </div>
                 <div>
@@ -481,67 +583,75 @@ const GalleryManagement: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Images ({selectedGallery.images.length})
                   </label>
-                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                    <input
-                      type="url"
-                      value={currentImageUrl}
-                      onChange={(e) => setCurrentImageUrl(e.target.value)}
-                      placeholder="Enter image URL"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddImage}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-1 whitespace-nowrap"
-                    >
-                      <Plus size={16} />
-                      Add Image
-                    </button>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {selectedGallery.images.map((media, index) => (
-                        <div key={index} className="relative group">
-                          {isVideo(getImageUrl(media)) ? (
-                            <video
-                              src={getImageUrl(media)}
-                              controls
-                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
-                              onError={(e) => {
-                                (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
-                              }}
-                            />
-                          ) : (
-                            <img
-                              src={getImageUrl(media)}
-                              alt={`Gallery image ${index + 1}`}
-                              className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
-                              }}
-                            />
-                          )}
-                          <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
-                            #{index + 1}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                            aria-label="Remove image"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
+                  {isSelectedGalleryVlog ? (
+                    <div className="p-4 bg-blue-50 text-blue-700 rounded-md text-sm">
+                      Image management is disabled for vlog entries. Update the YouTube URL instead.
                     </div>
-                    {selectedGallery.images.length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        <Images size={48} className="mx-auto mb-2 text-gray-300" />
-                        <p>No images in this gallery</p>
+                  ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input
+                          type="url"
+                          value={currentImageUrl}
+                          onChange={(e) => setCurrentImageUrl(e.target.value)}
+                          placeholder="Enter image URL"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddImage}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-1 whitespace-nowrap"
+                        >
+                          <Plus size={16} />
+                          Add Image
+                        </button>
                       </div>
-                    )}
-                  </div>
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          {selectedGallery.images.map((media, index) => (
+                            <div key={index} className="relative group">
+                              {isVideo(getImageUrl(media)) ? (
+                                <video
+                                  src={getImageUrl(media)}
+                                  controls
+                                  className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                                  onError={(e) => {
+                                    (e.target as HTMLVideoElement).poster = 'https://via.placeholder.com/200?text=Video+Not+Found';
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src={getImageUrl(media)}
+                                  alt={`Gallery image ${index + 1}`}
+                                  className="w-full h-32 sm:h-36 object-cover rounded-md border-2 border-gray-300"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/200?text=Image+Not+Found';
+                                  }}
+                                />
+                              )}
+                              <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                                #{index + 1}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                aria-label="Remove image"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedGallery.images.length === 0 && (
+                          <div className="text-center py-8 text-gray-500">
+                            <Images size={48} className="mx-auto mb-2 text-gray-300" />
+                            <p>No images in this gallery</p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
                   <button

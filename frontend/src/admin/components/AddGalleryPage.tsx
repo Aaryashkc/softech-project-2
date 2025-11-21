@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useGalleryStore } from '../../stores/useGalleryStore';
 import type { GalleryInput } from '../../stores/useGalleryStore';
-import { FileText, Image, Loader2, X, Upload, FolderOpen } from 'lucide-react';
+import { FileText, Image, Loader2, X, Upload, FolderOpen, Youtube } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { axiosInstance } from '../../libs/axios';
+import { extractYouTubeVideoId } from '../../utils/youtube';
 
 const InputField = ({ 
   label, 
@@ -66,7 +67,8 @@ const AddGalleryPage: React.FC = () => {
     title: '',
     description: '',
     images: [],
-    category: 'normal'
+    category: 'normal',
+    youtubeUrl: ''
   });
 
   interface FormErrors {
@@ -74,24 +76,40 @@ const AddGalleryPage: React.FC = () => {
     description?: string;
     images?: string;
     category?: string;
+    youtubeUrl?: string;
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isVlog = formData.category === 'vlog';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+    if (name === 'category') {
+      if (value === 'vlog' && imageFiles.length > 0) {
+        imageFiles.forEach(imageFile => URL.revokeObjectURL(imageFile.preview));
+        setImageFiles([]);
+      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        youtubeUrl: value === 'vlog' ? prev.youtubeUrl : ''
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     
     // Clear error when user starts typing
-    if (errors[name as keyof GalleryInput]) {
+    const key = name as keyof FormErrors;
+    if (errors[key]) {
       setErrors(prev => ({
         ...prev,
-        [name]: ''
+        [key]: ''
       }));
     }
   };
@@ -260,7 +278,15 @@ const AddGalleryPage: React.FC = () => {
 
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (imageFiles.length === 0) newErrors.images = 'At least one file (image or video) is required';
+    if (isVlog) {
+      if (!formData.youtubeUrl || !formData.youtubeUrl.trim()) {
+        newErrors.youtubeUrl = 'YouTube URL is required for vlogs';
+      } else if (!extractYouTubeVideoId(formData.youtubeUrl)) {
+        newErrors.youtubeUrl = 'Please enter a valid YouTube URL';
+      }
+    } else if (imageFiles.length === 0) {
+      newErrors.images = 'At least one file (image or video) is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -271,6 +297,35 @@ const AddGalleryPage: React.FC = () => {
     
     if (!validateForm()) {
       toast.error('Please fill in all required fields correctly');
+      return;
+    }
+
+    if (isVlog) {
+      try {
+        if (imageFiles.length) {
+          imageFiles.forEach(imageFile => URL.revokeObjectURL(imageFile.preview));
+          setImageFiles([]);
+        }
+        await createGallery({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          youtubeUrl: formData.youtubeUrl?.trim(),
+          images: []
+        });
+
+        setFormData({
+          title: '',
+          description: '',
+          images: [],
+          category: 'normal',
+          youtubeUrl: ''
+        });
+        setErrors({});
+      } catch (error) {
+        console.error('Error creating vlog:', error);
+        toast.error('Failed to create vlog');
+      }
       return;
     }
 
@@ -320,7 +375,8 @@ const AddGalleryPage: React.FC = () => {
         title: '',
         description: '',
         images: [],
-        category: 'normal'
+        category: 'normal',
+        youtubeUrl: ''
       });
       setImageFiles([]);
       setErrors({});
@@ -340,7 +396,8 @@ const AddGalleryPage: React.FC = () => {
       title: '',
       description: '',
       images: [],
-      category: 'normal'
+      category: 'normal',
+      youtubeUrl: ''
     });
     setImageFiles([]);
     setErrors({});
@@ -415,7 +472,7 @@ const AddGalleryPage: React.FC = () => {
                 required
               >
                 <option value="normal">Normal Gallery</option>
-                <option value="साहित्य र संगित">साहित्य र संगित</option>
+                <option value="vlog">Vlog</option>
               </select>
               {errors.category && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -425,57 +482,76 @@ const AddGalleryPage: React.FC = () => {
               )}
             </div>
 
+            {isVlog && (
+              <InputField
+                label="YouTube URL"
+                name="youtubeUrl"
+                icon={Youtube}
+                placeholder="https://www.youtube.com/watch?v=..."
+                required
+                value={formData.youtubeUrl || ''}
+                onChange={handleInputChange}
+                error={errors.youtubeUrl}
+              />
+            )}
+
             {/* Image Upload Section */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Upload className="w-4 h-4" />
-                Upload Images & Videos
-                <span className="text-red-500">*</span>
-              </label>
-
-              {/* File Upload Area */}
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              >
-                <input
-                  type="file"
-                  id="images-upload"
-                  multiple
-                  accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={isProcessing}
-                />
-                <label htmlFor="images-upload" className="cursor-pointer">
-                  {isProcessing ? (
-                    <div className="flex flex-col items-center">
-                      <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
-                      <p className="text-gray-600 mb-2">Processing files...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                      <p className="text-sm text-gray-500">Images: PNG, JPG, WebP | Videos: MP4, WebM, MOV</p>
-                      <p className="text-sm text-gray-500">Max 50MB per file, ~1000MB total</p>
-                      <p className="text-sm text-gray-500">You can select multiple files at once</p>
-                    </>
-                  )}
+            {!isVlog ? (
+              <div className="space-y-4">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Upload className="w-4 h-4" />
+                  Upload Images & Videos
+                  <span className="text-red-500">*</span>
                 </label>
-              </div>
 
-              {errors.images && (
-                <p className="text-sm text-red-600 flex items-center gap-1">
-                  <span className="w-4 h-4">⚠️</span>
-                  {errors.images}
-                </p>
-              )}
-            </div>
+                {/* File Upload Area */}
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    id="images-upload"
+                    multiple
+                    accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={isProcessing}
+                  />
+                  <label htmlFor="images-upload" className="cursor-pointer">
+                    {isProcessing ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                        <p className="text-gray-600 mb-2">Processing files...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                        <p className="text-sm text-gray-500">Images: PNG, JPG, WebP | Videos: MP4, WebM, MOV</p>
+                        <p className="text-sm text-gray-500">Max 50MB per file, ~1000MB total</p>
+                        <p className="text-sm text-gray-500">You can select multiple files at once</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {errors.images && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <span className="w-4 h-4">⚠️</span>
+                    {errors.images}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-blue-50 text-blue-800 text-sm">
+                Provide a valid YouTube link above to embed your vlog. Image uploads are disabled for vlog entries.
+              </div>
+            )}
 
             {/* Image Preview Grid */}
-            {imageFiles.length > 0 && (
+            {!isVlog && imageFiles.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-700">
@@ -561,7 +637,7 @@ const AddGalleryPage: React.FC = () => {
               </button>
               <button
                 type="submit"
-                disabled={isLoading || isProcessing || imageFiles.length === 0}
+                disabled={isLoading || isProcessing || (!isVlog && imageFiles.length === 0)}
                 className="w-full sm:flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
